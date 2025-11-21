@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slitho - Modern Snake Game | Play Now</title>
+    <meta name="description" content="Slitho is a modern, fast, and feature-rich snake game with minigames, boss fights, story mode, mobile support, and multiplayer-ready systems. Play free now!">
+    <meta name="keywords" content="snake game, browser game, arcade game, free game, html5 game, snake, slitho, minigames, boss fights">
+    <meta name="author" content="Slitho">
+    <meta name="version" content="2.0.0">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Slitho – Modern Snake Game">
+    <meta property="og:description" content="Play Slitho: a polished, high-performance snake game with minigames, boss encounters, daily challenges, and mobile-friendly controls.">
+    <meta property="og:url" content="https://slitho-game.com/">
+    <meta property="og:image" content="https://slitho-game.com/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Slitho - Modern Snake Game">
+    <meta property="og:site_name" content="Slitho">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Slitho – Modern Snake Game">
+    <meta name="twitter:description" content="A premium browser snake experience with minigames, story mode, daily challenges, and accessibility features.">
+    <meta name="twitter:image" content="https://slitho-game.com/og-image.png">
+    <meta name="twitter:image:alt" content="Slitho - Modern Snake Game">
+    
+    <!-- Additional SEO -->
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://slitho-game.com/">
+    <!-- Basic security-related hints (real CSP/headers should be set at the server level) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <!-- Unified favicon / logo: matches in-tab icon and in-game branding -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='central' font-size='38'%3E🐍%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Prevent theme flashing on initial load -->
+    <style>
+        html { visibility: hidden; }
+        html.theme-ready { visibility: visible; }
+    </style>
+    <script>
+        // Load theme immediately before page renders to prevent flash
+        (function() {
+            const saved = localStorage.getItem('snakeTheme') || 'dark';
+            const html = document.documentElement;
+            
+            // Set data-theme attribute
+            html.setAttribute('data-theme', saved);
+            
+            // Set dark/light class and remove opposite
+            if (saved === 'dark') {
+                html.classList.add('dark');
+                html.classList.remove('light');
+            } else {
+                html.classList.add('light');
+                html.classList.remove('dark');
+            }
+            
+            // Mark as ready to show
+            html.classList.add('theme-ready');
+        })();
+    </script>
+</head>
+<body>
+    <!-- Mode Select Screen -->
+    <div id="modeSelectScreen" class="mode-select-screen">
+        <div class="mode-select-content">
+            <header class="main-menu-header">
+                <h1 class="app-logo">
+                    <span class="app-logo-icon">🐍</span>
+                    <span class="app-logo-text">Slitho</span>
+                </h1>
+            </header>
+            
+            <!-- Mode Detection Loading State -->
+            <div id="modeDetectionLoading" style="text-align: center; padding: 20px; color: var(--text-secondary); display: none;">
+                Detecting available modes...
+            </div>
+            
+            <!-- Dynamic Mode Cards Container -->
+            <div id="modeCardsContainer" class="mode-cards-grid"></div>
+            
+            <!-- No Modes Fallback -->
+            <div id="noModesMessage" style="display: none; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <p>No game modes available</p>
+                <p style="font-size: 0.9em; margin-top: 10px;">Please check that mode scripts are loaded correctly.</p>
+            </div>
+            
+            <!-- Main Menu Buttons -->
+            <div class="mode-buttons" id="mainMenuButtons">
+                <!-- Game Modes -->
+                <button class="btn main-menu-btn" id="btn-classic" aria-label="Start Classic Mode" tabindex="0">
+                    <span class="btn-icon">🎮</span>
+                    <span class="btn-text">Classic Mode</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-endless" aria-label="Start Endless Mode" tabindex="0">
+                    <span class="btn-icon">∞</span>
+                    <span class="btn-text">Endless Mode</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-procedural" aria-label="Start Procedural Mode" tabindex="0">
+                    <span class="btn-icon">🌍</span>
+                    <span class="btn-text">Procedural Mode</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-boss" aria-label="Start Boss Mode" tabindex="0">
+                    <span class="btn-icon">👹</span>
+                    <span class="btn-text">Boss Mode</span>
+                </button>
+                
+                <!-- Minigames Section -->
+                <button class="btn main-menu-btn" id="btn-minigames" aria-label="View Minigames" tabindex="0">
+                    <span class="btn-icon">🎯</span>
+                    <span class="btn-text">Minigames</span>
+                </button>
+                
+                <!-- Individual Minigame Buttons (keep for direct access) -->
+                <button class="btn main-menu-btn main-menu-btn-minigame" id="minigameBtn_fruit_rush" aria-label="Play Fruit Rush Minigame" tabindex="0">
+                    <span class="btn-icon">🍎</span>
+                    <span class="btn-text">Fruit Rush</span>
+                </button>
+                
+                <button class="btn main-menu-btn main-menu-btn-minigame" id="minigameBtn_avoider" aria-label="Play Avoider Minigame" tabindex="0">
+                    <span class="btn-icon">⚠️</span>
+                    <span class="btn-text">Avoider</span>
+                </button>
+                
+                <button class="btn main-menu-btn main-menu-btn-minigame" id="minigameBtn_precision_bite" aria-label="Play Precision Bite Minigame" tabindex="0">
+                    <span class="btn-icon">🎯</span>
+                    <span class="btn-text">Precision Bite</span>
+                </button>
+                
+                <!-- Progression & Content -->
+                <button class="btn main-menu-btn" id="btn-level-select" aria-label="Select Level" tabindex="0">
+                    <span class="btn-icon">📋</span>
+                    <span class="btn-text">Level Select</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-shop" aria-label="Open Shop" tabindex="0">
+                    <span class="btn-icon">🛒</span>
+                    <span class="btn-text">Shop</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-inventory" aria-label="Open Inventory" tabindex="0">
+                    <span class="btn-icon">🎒</span>
+                    <span class="btn-text">Inventory</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-missions" aria-label="View Missions" tabindex="0">
+                    <span class="btn-icon">📜</span>
+                    <span class="btn-text">Missions</span>
+                </button>
+                
+                <!-- Settings -->
+                <button class="btn main-menu-btn" id="btn-settings" aria-label="Open Settings" tabindex="0">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">Settings</span>
+                </button>
+                
+                <button class="btn main-menu-btn" id="btn-themes" aria-label="Change Theme" tabindex="0">
+                    <span class="btn-icon">🎨</span>
+                    <span class="btn-text">Themes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Screen -->
+    <div id="gameScreen" class="game-screen" style="display: none;">
+        <header class="header">
+            <h1 class="app-logo">
+                <span class="app-logo-icon">🐍</span>
+                <span class="app-logo-text">Slitho</span>
+            </h1>
+            <div class="header-controls">
+                <button id="modeSelectBtn" class="icon-btn" aria-label="Mode Select">🏠</button>
+                <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌓</button>
+                <button id="soundToggle" class="icon-btn" aria-label="Toggle sound">🔊</button>
+                <button id="pauseBtn" class="icon-btn" aria-label="Pause">⏸</button>
+                <button id="restartBtn" class="btn">Restart</button>
+            </div>
+        </header>
+        
+        <main class="main">
+            <!-- Floating HUD -->
+            <div class="hud-container">
+                <div class="hud-item score-hud">
+                    <span class="hud-label">Score</span>
+                    <span id="score" class="hud-value">0</span>
+                </div>
+                <div class="hud-item coins-hud">
+                    <span class="hud-icon">🪙</span>
+                    <span class="hud-label">Coins</span>
+                    <span id="coins" class="hud-value">0</span>
+                </div>
+                <div class="hud-item player-level-hud">
+                    <span class="hud-label">Level</span>
+                    <span id="playerLevel" class="hud-value">1</span>
+                </div>
+                <div class="hud-item combo-hud" id="comboHud" style="display: none;">
+                    <span class="hud-label">Combo</span>
+                    <span id="comboCount" class="hud-value">x1</span>
+                </div>
+                <div class="hud-item zoom-hazard-hud" id="zoomHazardHud" style="display: none;">
+                    <span class="hud-icon">🔍</span>
+                    <span class="hud-label">Zoom Hazard</span>
+                    <span id="zoomHazardTimer" class="hud-timer">6.0s</span>
+                </div>
+                <div class="hud-item power-up-hud" id="powerUpHud" style="display: none;">
+                    <span id="powerUpIcon" class="hud-icon"></span>
+                    <span id="powerUpName" class="hud-label"></span>
+                    <span id="powerUpTimer" class="hud-timer"></span>
+                </div>
+                <div class="hud-item boss-hud" id="bossHud" style="display: none;">
+                    <span class="hud-icon">👹</span>
+                    <span class="hud-label" id="bossName">Boss</span>
+                    <div class="boss-health-bar">
+                        <div id="bossHealthFill" class="boss-health-fill"></div>
+                    </div>
+                </div>
+                <div class="hud-item level-hud" id="levelHud">
+                    <span class="hud-label">Level</span>
+                    <span id="level" class="hud-value">1</span>
+                    <span class="hud-subtext" id="targetScore">/ 5</span>
+                </div>
+                <div class="hud-item timer-hud" id="timerHud" style="display: none;">
+                    <span class="hud-label">Time</span>
+                    <span id="levelTimerDisplay" class="hud-value">0:00.00</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="gameCanvas"></canvas>
+                <canvas id="particleCanvas"></canvas>
+                <div id="gameOverOverlay" class="game-over-overlay">
+                    <div class="game-over-content">
+                        <h2>Game Over!</h2>
+                        <p>Final Score: <span id="finalScore">0</span></p>
+                        <p id="finalLevelText">Level Reached: <span id="finalLevel">1</span></p>
+                        <p id="newRecordText" class="new-record" style="display: none;">🏆 New Record! 🏆</p>
+                        <p class="hint">Press Restart or use arrow keys to play again</p>
+                    </div>
+                </div>
+                <div id="levelCompleteOverlay" class="level-complete-overlay">
+                    <div class="level-complete-content">
+                        <h2>Level <span id="completeLevel">1</span> Complete!</h2>
+                    </div>
+                </div>
+                <div id="pauseOverlay" class="pause-overlay">
+                    <div class="pause-content">
+                        <h2>Paused</h2>
+                        <p>Press P or tap pause to resume</p>
+                    </div>
+                </div>
+                <div id="bossWarningOverlay" class="boss-warning-overlay" style="display: none;">
+                    <div class="boss-warning-content">
+                        <h2 id="bossWarningText">⚠️ Boss Attack! ⚠️</h2>
+                    </div>
+                </div>
+            </div>
+            <div id="controlPad" class="control-pad">
+                <button class="control-btn" data-direction="up" aria-label="Up">↑</button>
+                <div class="control-row">
+                    <button class="control-btn" data-direction="left" aria-label="Left">←</button>
+                    <button class="control-btn" data-direction="down" aria-label="Down">↓</button>
+                    <button class="control-btn" data-direction="right" aria-label="Right">→</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>Desktop: Arrow Keys or WASD (P to Pause) | Mobile: Swipe or Control Pad</p>
+        </footer>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="modal-close" id="settingsClose" aria-label="Close Settings">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="boardRotationToggle">
+                        <span>Enable Board Rotation</span>
+                    </label>
+                </div>
+                
+                <!-- Audio Settings -->
+                <div class="setting-item" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">Audio</h3>
+                    
+                    <!-- Master Volume -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="masterVolumeSlider" style="display: block; margin-bottom: 5px;">
+                            Master Volume: <span id="masterVolumeValue">100%</span>
+                        </label>
+                        <input type="range" id="masterVolumeSlider" min="0" max="100" value="100" 
+                               style="width: 100%; margin-top: 5px;" class="volume-slider">
+                    </div>
+                    
+                    <!-- Music Volume -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="musicVolumeSlider" style="display: block; margin-bottom: 5px;">
+                            Music Volume: <span id="musicVolumeValue">70%</span>
+                        </label>
+                        <input type="range" id="musicVolumeSlider" min="0" max="100" value="70" 
+                               style="width: 100%; margin-top: 5px;" class="volume-slider">
+                    </div>
+                    
+                    <!-- SFX Volume -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="sfxVolumeSlider" style="display: block; margin-bottom: 5px;">
+                            SFX Volume: <span id="sfxVolumeValue">80%</span>
+                        </label>
+                        <input type="range" id="sfxVolumeSlider" min="0" max="100" value="80" 
+                               style="width: 100%; margin-top: 5px;" class="volume-slider">
+                    </div>
+                    
+                    <!-- UI Volume -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="uiVolumeSlider" style="display: block; margin-bottom: 5px;">
+                            UI Volume: <span id="uiVolumeValue">45%</span>
+                        </label>
+                        <input type="range" id="uiVolumeSlider" min="0" max="100" value="45" 
+                               style="width: 100%; margin-top: 5px;" class="volume-slider">
+                        <div style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px;">
+                            Controls hover, click, and menu interaction sounds
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Accessibility Settings -->
+                <div class="setting-item" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">Accessibility</h3>
+                    
+                    <!-- UI Scale -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="uiScaleSelect" style="display: block; margin-bottom: 5px;">UI Scale:</label>
+                        <select id="uiScaleSelect" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 5px; color: var(--text-primary);">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Text Size -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="textSizeSelect" style="display: block; margin-bottom: 5px;">Text Size:</label>
+                        <select id="textSizeSelect" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 5px; color: var(--text-primary);">
+                            <option value="small">Small</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    
+                    <!-- High Contrast -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="highContrastToggle">
+                            <span>High Contrast Mode</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Colorblind Mode -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label for="colorBlindModeSelect" style="display: block; margin-bottom: 5px;">Colorblind Mode:</label>
+                        <select id="colorBlindModeSelect" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 5px; color: var(--text-primary);">
+                            <option value="">None</option>
+                            <option value="protanopia">Protanopia</option>
+                            <option value="deuteranopia">Deuteranopia</option>
+                            <option value="tritanopia">Tritanopia</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Reduced Motion -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="reducedMotionToggle">
+                            <span>Reduced Motion</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Focus Indicators -->
+                    <div class="setting-item" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="showFocusIndicatorsToggle" checked>
+                            <span>Show Focus Indicators</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Cloud Sync -->
+                <div class="setting-item" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3 style="margin-bottom: 10px; color: var(--text-primary);">Cloud Sync</h3>
+                    <p id="cloudSyncStatusText" style="margin-bottom: 10px; font-size: 0.9em; color: var(--text-secondary);">
+                        Not signed in • Idle
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn" id="cloudSignInBtn" type="button" style="flex: 1; min-width: 140px;">
+                            Sign In
+                        </button>
+                        <button class="btn" id="cloudSyncNowBtn" type="button" style="flex: 1; min-width: 140px; background: var(--bg-secondary);">
+                            Sync Now
+                        </button>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.85em; color: var(--text-secondary);">
+                        Optional. Syncs your progress to a mock cloud store on this device. Game always runs even if sync fails.
+                    </p>
+                </div>
+                
+                <div class="setting-item" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <button class="btn" id="resetProgressBtn" style="width: 100%; background: #f44336;">
+                        Reset Level Progress
+                    </button>
+                    <p style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9em;">
+                        This will reset all unlocked levels. This action cannot be undone.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Themes Modal -->
+    <div id="themesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Themes</h2>
+                <button class="modal-close" id="themesClose" aria-label="Close Themes">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-grid" id="themeGrid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Shop Modal -->
+    <div id="shopModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Shop</h2>
+                <div class="shop-coins">
+                    <span>🪙 <span id="shopCoinsDisplay">0</span></span>
+                </div>
+                <button class="modal-close" id="shopClose" aria-label="Close Shop">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="shop-tabs" role="tablist" aria-label="Shop categories">
+                    <button class="shop-tab active" data-tab="all" role="tab" aria-selected="true" aria-controls="shopContent">All Items</button>
+                    <button class="shop-tab" data-tab="active" role="tab" aria-selected="false" aria-controls="shopContent">Active</button>
+                    <button class="shop-tab" data-tab="consumables" role="tab" aria-selected="false" aria-controls="shopContent">Consumables</button>
+                    <button class="shop-tab" data-tab="cosmetics" role="tab" aria-selected="false" aria-controls="shopContent">Cosmetics</button>
+                </div>
+                <div class="shop-filter" style="margin: 15px 0;">
+                    <input type="text" id="shopSearch" placeholder="Search items..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <select id="shopRarityFilter" style="width: 100%; padding: 8px;">
+                        <option value="">All Rarities</option>
+                        <option value="COMMON">Common</option>
+                        <option value="RARE">Rare</option>
+                        <option value="EPIC">Epic</option>
+                        <option value="LEGENDARY">Legendary</option>
+                    </select>
+                </div>
+                <div id="shopRecommended" style="margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px; border: 2px solid var(--border-color);">
+                    <h3 style="margin-bottom: 10px;">⭐ Recommended for You</h3>
+                    <div id="shopRecommendedItem"></div>
+                </div>
+                <div class="shop-content" id="shopContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Modal -->
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Inventory</h2>
+                <button class="modal-close" id="inventoryClose" aria-label="Close Inventory">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="inventory-tabs" role="tablist" aria-label="Inventory categories">
+                    <button class="inventory-tab active" data-tab="equipped" role="tab" aria-selected="true" aria-controls="inventoryContent">Equipped</button>
+                    <button class="inventory-tab" data-tab="owned" role="tab" aria-selected="false" aria-controls="inventoryContent">Owned</button>
+                    <button class="inventory-tab" data-tab="consumables" role="tab" aria-selected="false" aria-controls="inventoryContent">Consumables</button>
+                </div>
+                <div class="inventory-filter" style="margin: 15px 0;">
+                    <input type="text" id="inventorySearch" placeholder="Search items..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <select id="inventoryRarityFilter" style="width: 100%; padding: 8px;">
+                        <option value="">All Rarities</option>
+                        <option value="COMMON">Common</option>
+                        <option value="RARE">Rare</option>
+                        <option value="EPIC">Epic</option>
+                        <option value="LEGENDARY">Legendary</option>
+                    </select>
+                </div>
+                <div class="inventory-content" id="inventoryContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progression Summary Screen -->
+    <div id="progressionSummary" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Run Summary</h2>
+            </div>
+            <div class="modal-body">
+                <div id="progressionSummaryContent">
+                    <!-- Content populated by JavaScript -->
+                </div>
+                <button class="btn" id="progressionSummaryClose" style="margin-top: 20px; width: 100%;">Continue</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cloud Sign-In Modal -->
+    <div id="cloudSignInModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Sign In to Cloud</h2>
+                <button class="modal-close" id="cloudSignInCancel" aria-label="Close Cloud Sign-In">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 10px;">
+                    Enter an email to associate your progress with this device. No password required. This uses a local mock cloud and does not affect gameplay.
+                </p>
+                <label for="cloudEmailInput" style="display:block; margin-bottom: 5px;">Email</label>
+                <input id="cloudEmailInput" type="email" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary);" placeholder="you@example.com">
+                <button class="btn" id="cloudSignInSubmit" type="button" style="margin-top: 15px; width: 100%;">
+                    Sign In &amp; Sync
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missions Modal -->
+    <div id="missionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Missions</h2>
+                <button class="modal-close" id="missionsClose" aria-label="Close Missions">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="player-progress">
+                    <div class="progress-info">
+                        <span>Player Level: <strong id="missionsPlayerLevel">1</strong></span>
+                        <div class="level-progress-bar">
+                            <div id="levelProgressFill" class="level-progress-fill"></div>
+                        </div>
+                        <span id="levelProgressText">0 / 100 XP</span>
+                    </div>
+                </div>
+                <div class="missions-list" id="missionsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level Select Modal -->
+    <div id="levelSelectModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Select Level</h2>
+                <button class="modal-close" id="levelSelectClose" aria-label="Close Level Select">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="level-select-info" style="margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px;">
+                    <p style="margin: 0; color: var(--text-secondary);">
+                        Complete levels to unlock new ones. Start with Level 1!
+                    </p>
+                </div>
+                <div class="level-grid" id="levelSelectGrid">
+                    <!-- Levels will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level Editor Modal -->
+    <div id="levelEditorModal" class="modal">
+        <div class="modal-content level-editor-content">
+            <div class="modal-header">
+                <h2>Level Editor</h2>
+                <button class="modal-close" id="levelEditorClose" aria-label="Close Level Editor">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="editor-toolbar">
+                    <div class="tile-palette" id="tilePalette"></div>
+                    <div class="editor-controls">
+                        <button id="saveLevelBtn" class="btn">💾 Save Level</button>
+                        <button id="loadLevelBtn" class="btn">📂 Load Level</button>
+                        <button id="clearLevelBtn" class="btn">🗑️ Clear</button>
+                        <button id="playtestLevelBtn" class="btn">▶️ Playtest</button>
+                        <select id="loadLevelSelect" class="level-select">
+                            <option value="">Select Level...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="editor-canvas-wrapper">
+                    <canvas id="editorCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Procedural Mode Settings -->
+    <div id="proceduralSettingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Procedural Settings</h2>
+                <button class="modal-close" id="proceduralSettingsClose" aria-label="Close Procedural Settings">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>Board Size: <span id="boardSizeValue">20</span></label>
+                    <input type="range" id="boardSizeSlider" min="15" max="30" value="20">
+                </div>
+                <div class="setting-item">
+                    <label>Obstacle Density: <span id="obstacleDensityValue">30%</span></label>
+                    <input type="range" id="obstacleDensitySlider" min="10" max="50" value="30">
+                </div>
+                <div class="setting-item">
+                    <label>Biome:</label>
+                    <select id="biomeSelect">
+                        <option value="default">Default</option>
+                        <option value="forest">Forest</option>
+                        <option value="desert">Desert</option>
+                        <option value="ice">Ice</option>
+                        <option value="lava">Lava</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="useSeedCheck">
+                        <span>Use Seed (Replayable)</span>
+                    </label>
+                    <input type="text" id="seedInput" placeholder="Enter seed..." style="margin-top: 10px; width: 100%; padding: 8px;">
+                </div>
+                <button id="generateProceduralBtn" class="btn">Generate Terrain</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Achievement Popup -->
+    <div id="achievementPopup" class="achievement-popup">
+        <div class="achievement-popup-content">
+            <span class="achievement-icon">🏆</span>
+            <div>
+                <h3 id="achievementPopupTitle">Achievement Unlocked!</h3>
+                <p id="achievementPopupDesc"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Combo Text -->
+    <div id="comboText" class="combo-text"></div>
+    
+    <!-- Cutscene Container (created dynamically) -->
+    
+    <!-- Scripts -->
+    <script src="cutscenes.js"></script>
+    <script src="seasonal.js"></script>
+    <script src="worldmap.js"></script>
+    <script src="minigames/index.js"></script>
+    <script src="progression.js"></script>
+    <script src="items.js"></script>
+    <script src="item-unlocks.js"></script>
+    <script src="item-effects.js"></script>
+    <script src="inventory-ui.js"></script>
+    <script src="shop-ui.js"></script>
+    <script src="progression-summary.js"></script>
+    <!-- Configuration -->
+    <script src="config/balance.js"></script>
+    
+    <!-- Defensive Utilities (load first) -->
+    <script src="systems/defensive-utils.js"></script>
+    
+    <!-- Core Systems -->
+    <script src="systems/module-loader.js"></script>
+    <script src="systems/initialization-manager.js"></script>
+    <script src="systems/stateManager.js"></script>
+    <script src="systems/tick-engine.js"></script>
+    <script src="systems/error-handler.js"></script>
+    <script src="systems/robust-save-system.js"></script>
+    <script src="systems/animation-manager.js"></script>
+    <script src="systems/home-animations.js"></script>
+    <script src="systems/audio-manager.js"></script>
+    <script src="systems/accessibility.js"></script>
+    <script src="systems/performance-protection.js"></script>
+    
+    <!-- Asset Loading -->
+    <script src="systems/asset-loader.js"></script>
+    
+    <!-- Progression -->
+    <script src="progression.js"></script>
+    <script src="skillTree.js"></script>
+    
+    <!-- Rendering -->
+    <script src="renderer.js"></script>
+    <script src="snakeAnimator.js"></script>
+    <script src="cameraShake.js"></script>
+    
+    <!-- Systems -->
+    <script src="systems/particle-system.js"></script>
+    <script src="systems/hit-feedback.js"></script>
+    <script src="systems/global-modifiers.js"></script>
+    <script src="systems/debug-tools.js"></script>
+    <script src="systems/profiler.js"></script>
+    <script src="systems/gamepad.js"></script>
+    <script src="systems/ghostReplay.js"></script>
+    
+    <!-- Content -->
+    <script src="content/hazards.js"></script>
+    <script src="content/food-types.js"></script>
+    
+    <!-- UI -->
+    <script src="ui.js"></script>
+
+    <!-- Featured Challenge Module -->
+    <script src="systems/featured-challenge.js"></script>
+    
+    <!-- Progression Dashboard -->
+    <script src="systems/progression-dashboard.js"></script>
+    
+    <!-- What's New Update Panel -->
+    <script src="systems/whats-new.js"></script>
+    
+    <!-- Theme Presets -->
+    <script src="systems/theme-presets.js"></script>
+    
+    <!-- Feedback Widget -->
+    <script src="systems/feedback-widget.js"></script>
+    
+    <!-- Roadmap -->
+    <script src="systems/roadmap.js"></script>
+    
+    <!-- Social Share -->
+    <script src="systems/social-share.js"></script>
+    
+    <!-- All new feature systems registered above -->
+
+    <!-- Cloud sync (UI-only module, after base UI) -->
+    <script src="cloud-sync.js"></script>
+    
+    <!-- Game loop and performance -->
+    <script src="performance-settings.js"></script>
+    <script src="canvas-optimization.js"></script>
+    
+    <!-- Phase 7: Multiplayer Systems -->
+    <script src="systems/player-identity.js"></script>
+    <script src="systems/sync-safe-engine.js"></script>
+    <script src="systems/local-multiplayer.js"></script>
+    <script src="systems/network-client.js"></script>
+    <script src="systems/multiplayer-controller.js"></script>
+    
+    <!-- Phase 8: Mobile & Touch Support -->
+    <script src="systems/touch-input.js"></script>
+    <script src="systems/gamepad-input.js"></script>
+    <script src="systems/mobile-ui.js"></script>
+    <script src="systems/performance-scaler.js"></script>
+    <script src="systems/save-sync.js"></script>
+    <script src="systems/battery-optimizer.js"></script>
+    
+    <!-- Phase 9: AI Bosses & Story Mode -->
+    <script src="systems/boss-ai.js"></script>
+    <script src="systems/boss-encounters.js"></script>
+    <script src="systems/story-mode.js"></script>
+    <script src="systems/story-progression.js"></script>
+    <script src="systems/narrative-tools.js"></script>
+    
+    <!-- Phase 7+: Engine Stability & Future-Proofing -->
+    <script src="systems/unified-input-router.js"></script>
+    <script src="systems/mode-compatibility-checker.js"></script>
+    <script src="systems/expansion-api.js"></script>
+    
+    <!-- Button System (load before game.js to register buttons) -->
+    <script src="systems/unified-button-handler.js"></script>
+    <script src="systems/button-registry.js"></script>
+    
+    <!-- Mode Select System (load before game.js for mode detection) -->
+    <script src="modeSelect.js"></script>
+    
+    <!-- Game logic (loads last, depends on all modules) -->
+    <script src="game.js"></script>
+
+    <!-- UI: Hotkey helper (pure UI, after core game logic) -->
+    <script src="ui-hotkeys.js"></script>
+    
+    <!-- Initialize systems with deterministic order -->
+    <script>
+        // Initialize on load with proper order
+        window.addEventListener('load', async () => {
+            try {
+                console.log('INIT: DOM → OK');
+
+                // Load defensive utils first
+                if (window.DefensiveUtils) {
+                    // Already loaded
+                }
+                
+                // Initialize initialization manager
+                if (window.InitManager) {
+                    // Register all modules
+                    if (window.ErrorHandler) window.InitManager.register('ErrorHandler', () => window.ErrorHandler.init());
+                    if (window.DefensiveUtils) window.InitManager.register('DefensiveUtils', () => {});
+                    if (window.ModuleLoader) window.InitManager.register('ModuleLoader', () => {});
+                    if (window.StateManager) window.InitManager.register('StateManager', () => {});
+                    if (window.RobustSaveSystem) window.InitManager.register('SaveSystem', () => window.RobustSaveSystem.init());
+                    if (window.Progression) window.InitManager.register('Progression', () => window.Progression.initialize());
+                    if (window.SkillTree) window.InitManager.register('SkillTree', () => window.SkillTree.initialize());
+                    if (window.AssetLoader) window.InitManager.register('AssetLoader', async () => {
+                        console.log('INIT: AssetLoader → starting');
+                        window.AssetLoader.init();
+                        if (window.AssetLoader.loadAll) {
+                            await window.AssetLoader.loadAll();
+                        }
+                        console.log('INIT: AssetLoader → OK');
+                    });
+                    if (window.ParticleSystem) window.InitManager.register('ParticleSystem', () => window.ParticleSystem.init());
+                    if (window.HitFeedback) window.InitManager.register('HitFeedback', () => window.HitFeedback.init());
+                    if (window.CameraShake) window.InitManager.register('CameraShake', () => window.CameraShake.init());
+                    if (window.TickEngine) window.InitManager.register('TickEngine', () => {});
+                    if (window.Renderer) window.InitManager.register('Renderer', () => {
+                        const canvas = document.getElementById('gameCanvas');
+                        const ctx = canvas ? canvas.getContext('2d') : null;
+                        const particleCanvas = document.getElementById('particleCanvas');
+                        const particleCtx = particleCanvas ? particleCanvas.getContext('2d') : null;
+                        if (canvas && ctx) {
+                            window.Renderer.init(canvas, ctx, particleCanvas, particleCtx, 20, 20, 20);
+                        }
+                    });
+                    if (window.SnakeAnimator) window.InitManager.register('SnakeAnimator', () => window.SnakeAnimator.init());
+                    if (window.Gamepad) window.InitManager.register('Gamepad', () => window.Gamepad.init());
+                    if (window.GhostReplay) window.InitManager.register('GhostReplay', () => window.GhostReplay.init());
+                    if (window.GlobalModifiers) window.InitManager.register('GlobalModifiers', () => {});
+                    if (window.DebugTools) window.InitManager.register('DebugTools', () => window.DebugTools.init());
+                    if (window.UI) window.InitManager.register('UI', () => window.UI.initialize());
+                    if (window.FeaturedChallenge) window.InitManager.register('FeaturedChallenge', () => window.FeaturedChallenge.init());
+                    if (window.ProgressionDashboard) window.InitManager.register('ProgressionDashboard', () => window.ProgressionDashboard.init());
+                    if (window.WhatsNew) window.InitManager.register('WhatsNew', () => window.WhatsNew.init());
+                    if (window.ThemePresets) window.InitManager.register('ThemePresets', () => window.ThemePresets.init());
+                    if (window.FeedbackWidget) window.InitManager.register('FeedbackWidget', () => window.FeedbackWidget.init());
+                    if (window.Roadmap) window.InitManager.register('Roadmap', () => window.Roadmap.init());
+                    if (window.SocialShare) window.InitManager.register('SocialShare', () => window.SocialShare.init());
+                    if (window.Accessibility) window.InitManager.register('Accessibility', () => window.Accessibility.init());
+                    if (window.AudioManager) window.InitManager.register('AudioManager', () => window.AudioManager.init());
+                    if (window.AnimationManager) window.InitManager.register('AnimationManager', () => window.AnimationManager.init());
+                    if (window.HomeAnimations) window.InitManager.register('HomeAnimations', () => window.HomeAnimations.init());
+                    if (window.PerformanceProtection) window.InitManager.register('PerformanceProtection', () => window.PerformanceProtection.init());
+                    
+                    // Phase 6: Content Pipeline Systems
+                    if (window.ContentRegistry) window.InitManager.register('ContentRegistry', () => window.ContentRegistry.init());
+                    if (window.ContentLoader) window.InitManager.register('ContentLoader', () => window.ContentLoader.init());
+                    if (window.EventController) window.InitManager.register('EventController', () => window.EventController.init());
+                    if (window.RotatingContent) window.InitManager.register('RotatingContent', () => window.RotatingContent.init());
+                    if (window.VersionManager) window.InitManager.register('VersionManager', () => window.VersionManager.init());
+                    if (window.MetaProgression) window.InitManager.register('MetaProgression', () => window.MetaProgression.init());
+                    if (window.CosmeticSystem) window.InitManager.register('CosmeticSystem', () => window.CosmeticSystem.init());
+                    if (window.PerformanceScaler) window.InitManager.register('PerformanceScaler', () => window.PerformanceScaler.init());
+                    if (window.CreatorTools) window.InitManager.register('CreatorTools', () => window.CreatorTools.init());
+                    
+                    // Phase 7: Multiplayer Systems
+                    if (window.PlayerIdentity) window.InitManager.register('PlayerIdentity', () => window.PlayerIdentity.init());
+                    if (window.SyncSafeEngine) window.InitManager.register('SyncSafeEngine', () => window.SyncSafeEngine.init());
+                    if (window.LocalMultiplayer) window.InitManager.register('LocalMultiplayer', () => window.LocalMultiplayer.init());
+                    if (window.NetworkClient) window.InitManager.register('NetworkClient', () => window.NetworkClient.init());
+                    if (window.MultiplayerController) window.InitManager.register('MultiplayerController', () => window.MultiplayerController.init());
+                    
+                    // Phase 8: Mobile & Touch Support
+                    if (window.TouchInput) window.InitManager.register('TouchInput', () => window.TouchInput.init());
+                    if (window.GamepadInput) window.InitManager.register('GamepadInput', () => window.GamepadInput.init());
+                    if (window.MobileUI) window.InitManager.register('MobileUI', () => window.MobileUI.init());
+                    if (window.PerformanceScaler) window.InitManager.register('PerformanceScaler', () => window.PerformanceScaler.init());
+                    if (window.SaveSync) window.InitManager.register('SaveSync', () => window.SaveSync.init());
+                    if (window.BatteryOptimizer) window.InitManager.register('BatteryOptimizer', () => window.BatteryOptimizer.init());
+                    
+                    // Phase 9: AI Bosses & Story Mode
+                    if (window.BossAI) window.InitManager.register('BossAI', () => window.BossAI.init());
+                    if (window.BossEncounters) window.InitManager.register('BossEncounters', () => window.BossEncounters.init());
+                    if (window.StoryMode) window.InitManager.register('StoryMode', () => window.StoryMode.init());
+                    if (window.StoryProgression) window.InitManager.register('StoryProgression', () => window.StoryProgression.init());
+                    if (window.NarrativeTools) window.InitManager.register('NarrativeTools', () => window.NarrativeTools.init());
+                    
+                    // Phase 7+: Engine Stability & Future-Proofing
+                    if (window.UnifiedInputRouter) window.InitManager.register('UnifiedInputRouter', () => window.UnifiedInputRouter.init());
+                    if (window.ModeCompatibilityChecker) window.InitManager.register('ModeCompatibilityChecker', () => window.ModeCompatibilityChecker.init());
+                    if (window.ExpansionAPI) window.InitManager.register('ExpansionAPI', () => window.ExpansionAPI.init());
+                    
+                    // Button System
+                    if (window.UnifiedButtonHandler) window.InitManager.register('UnifiedButtonHandler', () => window.UnifiedButtonHandler.init());
+                    if (window.ButtonRegistry) window.InitManager.register('ButtonRegistry', () => window.ButtonRegistry.init());
+
+                    // Register Game boot as the final step
+                    if (window.initGame) {
+                        window.InitManager.register('Game', () => {
+                            console.log('INIT: Modules Loaded → OK');
+                            try {
+                                window.initGame();
+                            } catch (e) {
+                                console.error('INIT: Game failed to initialize:', e);
+                                if (window.ErrorHandler) {
+                                    window.ErrorHandler.handle(e, 'Game Initialization', 0);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Initialize all in order
+                    await window.InitManager.initializeAll();
+                    
+                    // Ensure mode select screen is visible after initialization
+                    console.log('[INIT] Setting up mode select visibility checks');
+                    
+                    // First check at 200ms
+                    setTimeout(() => {
+                        console.log('[INIT] First visibility check at 200ms');
+                        const modeSelectScreen = document.getElementById('modeSelectScreen');
+                        const gameScreen = document.getElementById('gameScreen');
+                        if (modeSelectScreen && gameScreen) {
+                            console.log('[INIT] Elements found, ensuring mode select is visible');
+                            modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                            gameScreen.style.setProperty('display', 'none', 'important');
+                        } else {
+                            console.warn('[INIT] modeSelectScreen or gameScreen not found', { modeSelectScreen, gameScreen });
+                        }
+                        if (typeof showModeSelect === 'function') {
+                            console.log('[INIT] Calling showModeSelect()');
+                            try {
+                                showModeSelect();
+                            } catch (e) {
+                                console.error('[INIT] showModeSelect failed:', e);
+                            }
+                        } else {
+                            console.warn('[INIT] showModeSelect function not available');
+                        }
+                    }, 200);
+                    
+                    // Second check at 500ms as final safety net
+                    setTimeout(() => {
+                        console.log('[INIT] Final safety check at 500ms');
+                        const modeSelectScreen = document.getElementById('modeSelectScreen');
+                        const gameScreen = document.getElementById('gameScreen');
+                        if (modeSelectScreen && gameScreen) {
+                            const currentDisplay = modeSelectScreen.style.display || window.getComputedStyle(modeSelectScreen).display;
+                            if (currentDisplay === 'none' || !modeSelectScreen.hasAttribute('data-game-active')) {
+                                console.warn('[INIT] Mode select was hidden, restoring visibility');
+                                modeSelectScreen.removeAttribute('data-game-active');
+                                modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                                gameScreen.style.setProperty('display', 'none', 'important');
+                            }
+                            if (typeof showModeSelect === 'function') {
+                                try {
+                                    showModeSelect();
+                                } catch (e) {
+                                    console.error('[INIT] showModeSelect failed (500ms safety check):', e);
+                                }
+                            }
+                        }
+                    }, 500);
+                } else {
+                    // Fallback: initialize manually
+                    if (window.ErrorHandler) window.ErrorHandler.init();
+                    if (window.AssetLoader) {
+                        console.log('INIT: AssetLoader → starting (fallback)');
+                        window.AssetLoader.init();
+                        if (window.AssetLoader.loadAll) {
+                            await window.AssetLoader.loadAll();
+                        }
+                        console.log('INIT: AssetLoader → OK (fallback)');
+                    }
+                    if (window.ParticleSystem) window.ParticleSystem.init();
+                    if (window.HitFeedback) window.HitFeedback.init();
+                    if (window.RobustSaveSystem) window.RobustSaveSystem.init();
+                    if (window.Accessibility) window.Accessibility.init();
+                    if (window.AudioManager) window.AudioManager.init();
+                    if (window.AnimationManager) window.AnimationManager.init();
+                    if (window.PerformanceProtection) window.PerformanceProtection.init();
+                    if (window.DebugTools) window.DebugTools.init();
+
+                    // Finally boot the game if InitManager is not available
+                    if (window.initGame) {
+                        console.log('INIT: Modules Loaded → OK (fallback)');
+                        try {
+                            window.initGame();
+                        } catch (e) {
+                            console.error('INIT: Game failed to initialize (fallback):', e);
+                            if (window.ErrorHandler) {
+                                window.ErrorHandler.handle(e, 'Game Initialization (Fallback)', 0);
+                            }
+                        }
+                    }
+                    
+                    // Ensure mode select screen is visible after fallback initialization
+                    console.log('[INIT] Setting up fallback mode select visibility checks');
+                    
+                    // First check at 200ms
+                    setTimeout(() => {
+                        console.log('[INIT] Fallback first visibility check at 200ms');
+                        const modeSelectScreen = document.getElementById('modeSelectScreen');
+                        const gameScreen = document.getElementById('gameScreen');
+                        if (modeSelectScreen && gameScreen) {
+                            console.log('[INIT] Fallback: Elements found, ensuring mode select is visible');
+                            modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                            gameScreen.style.setProperty('display', 'none', 'important');
+                        } else {
+                            console.warn('[INIT] Fallback: modeSelectScreen or gameScreen not found', { modeSelectScreen, gameScreen });
+                        }
+                        if (typeof showModeSelect === 'function') {
+                            console.log('[INIT] Fallback: Calling showModeSelect()');
+                            try {
+                                showModeSelect();
+                            } catch (e) {
+                                console.error('[INIT] Fallback: showModeSelect failed:', e);
+                            }
+                        } else {
+                            console.warn('[INIT] Fallback: showModeSelect function not available');
+                        }
+                    }, 200);
+                    
+                    // Second check at 500ms as final safety net
+                    setTimeout(() => {
+                        console.log('[INIT] Fallback final safety check at 500ms');
+                        const modeSelectScreen = document.getElementById('modeSelectScreen');
+                        const gameScreen = document.getElementById('gameScreen');
+                        if (modeSelectScreen && gameScreen) {
+                            const currentDisplay = modeSelectScreen.style.display || window.getComputedStyle(modeSelectScreen).display;
+                            if (currentDisplay === 'none' || !modeSelectScreen.hasAttribute('data-game-active')) {
+                                console.warn('[INIT] Fallback: Mode select was hidden, restoring visibility');
+                                modeSelectScreen.removeAttribute('data-game-active');
+                                modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                                gameScreen.style.setProperty('display', 'none', 'important');
+                            }
+                            if (typeof showModeSelect === 'function') {
+                                try {
+                                    showModeSelect();
+                                } catch (e) {
+                                    console.error('[INIT] Fallback: showModeSelect failed (500ms safety check):', e);
+                                }
+                            }
+                        }
+                    }, 500);
+                }
+            } catch (e) {
+                console.error('Initialization error:', e);
+                if (window.ErrorHandler) {
+                    window.ErrorHandler.handle(e, 'Initialization', 0);
+                }
+            }
+        });
+
+        // Safety timeout: if boot takes too long, force-start the game and hide loading overlay.
+        setTimeout(() => {
+            if (!window.__GAME_READY__) {
+                console.warn('INIT: Timeout reached, forcing game start');
+                if (window.initGame) {
+                    try {
+                        window.initGame();
+                    } catch (e) {
+                        console.error('INIT: Game failed to initialize (timeout):', e);
+                        if (window.ErrorHandler) {
+                            window.ErrorHandler.handle(e, 'Game Initialization (Timeout)', 0);
+                        }
+                    }
+                }
+                if (window.AssetLoader && window.AssetLoader.loadingScreen) {
+                    try {
+                        const ls = window.AssetLoader.loadingScreen;
+                        ls.style.opacity = '0';
+                        ls.style.transition = 'opacity 0.3s';
+                        setTimeout(() => {
+                            if (ls.parentNode) ls.parentNode.removeChild(ls);
+                        }, 300);
+                    } catch (e) {
+                        console.warn('INIT: Failed to forcibly hide loading screen:', e);
+                    }
+                }
+                
+                // Ensure mode select is visible after timeout
+                setTimeout(() => {
+                    console.log('[INIT] Timeout safety check - ensuring mode select is visible');
+                    const modeSelectScreen = document.getElementById('modeSelectScreen');
+                    const gameScreen = document.getElementById('gameScreen');
+                    if (modeSelectScreen && gameScreen) {
+                        console.log('[INIT] Timeout: Elements found, ensuring mode select is visible');
+                        modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                        gameScreen.style.setProperty('display', 'none', 'important');
+                    } else {
+                        console.warn('[INIT] Timeout: modeSelectScreen or gameScreen not found', { modeSelectScreen, gameScreen });
+                    }
+                    if (typeof showModeSelect === 'function') {
+                        console.log('[INIT] Timeout: Calling showModeSelect()');
+                        try {
+                            showModeSelect();
+                        } catch (e) {
+                            console.error('[INIT] Timeout: showModeSelect failed:', e);
+                        }
+                    } else {
+                        console.warn('[INIT] Timeout: showModeSelect function not available');
+                    }
+                }, 200);
+                
+                // Additional final safety net at 500ms after timeout
+                setTimeout(() => {
+                    console.log('[INIT] Timeout final safety check at 500ms');
+                    const modeSelectScreen = document.getElementById('modeSelectScreen');
+                    const gameScreen = document.getElementById('gameScreen');
+                    if (modeSelectScreen && gameScreen) {
+                        const currentDisplay = modeSelectScreen.style.display || window.getComputedStyle(modeSelectScreen).display;
+                        if (currentDisplay === 'none' || !modeSelectScreen.hasAttribute('data-game-active')) {
+                            console.warn('[INIT] Timeout: Mode select was hidden, restoring visibility');
+                            modeSelectScreen.removeAttribute('data-game-active');
+                            modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                            gameScreen.style.setProperty('display', 'none', 'important');
+                        }
+                        if (typeof showModeSelect === 'function') {
+                            try {
+                                showModeSelect();
+                            } catch (e) {
+                                console.error('[INIT] Timeout: showModeSelect failed (500ms safety check):', e);
+                            }
+                        }
+                    }
+                }, 500);
+            }
+        }, 1500);
+    </script>
+    
+    <!-- MutationObserver to prevent unauthorized hiding of mode select screen -->
+    <script>
+        // Watch for unauthorized attempts to hide the mode select screen
+        (function() {
+            let observerInitialized = false;
+            
+            function initModeSelectObserver() {
+                if (observerInitialized) return;
+                
+                const modeSelectScreen = document.getElementById('modeSelectScreen');
+                if (!modeSelectScreen) {
+                    // Retry after a short delay if element doesn't exist yet
+                    setTimeout(initModeSelectObserver, 100);
+                    return;
+                }
+                
+                observerInitialized = true;
+                console.log('[ModeSelectObserver] Initializing observer to protect mode select screen');
+                
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            const display = modeSelectScreen.style.display;
+                            const hasDataGameActive = modeSelectScreen.hasAttribute('data-game-active');
+                            
+                            // If display is set to 'none' without data-game-active, restore it
+                            if (display === 'none' && !hasDataGameActive) {
+                                console.warn('[ModeSelectObserver] Unauthorized hiding detected! Restoring mode select screen. Stack:', new Error().stack);
+                                modeSelectScreen.style.setProperty('display', 'flex', 'important');
+                                modeSelectScreen.removeAttribute('data-game-active');
+                            }
+                        }
+                    });
+                });
+                
+                // Observe style attribute changes
+                observer.observe(modeSelectScreen, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+                
+                console.log('[ModeSelectObserver] Observer active and protecting mode select screen');
+            }
+            
+            // Initialize after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initModeSelectObserver);
+            } else {
+                // DOM already loaded
+                setTimeout(initModeSelectObserver, 100);
+            }
+            
+            // Also try on window load as backup
+            window.addEventListener('load', () => {
+                setTimeout(initModeSelectObserver, 200);
+            });
+        })();
+    </script>
+    
+    <!-- Main Menu Button Fallback Initialization -->
+    <script>
+        (function() {
+            // Fallback button registration if ButtonRegistry fails
+            function initializeMainMenuButtons() {
+                const buttons = {
+                    'btn-classic': () => {
+                        if (typeof initClassicMode === 'function') {
+                            initClassicMode();
+                            if (typeof hideModeSelect === 'function') hideModeSelect();
+                        } else {
+                            console.warn('[MainMenu] initClassicMode not available');
+                        }
+                    },
+                    'btn-endless': () => {
+                        if (typeof initEndlessMode === 'function') {
+                            initEndlessMode();
+                            if (typeof hideModeSelect === 'function') hideModeSelect();
+                        } else {
+                            console.warn('[MainMenu] initEndlessMode not available');
+                        }
+                    },
+                    'btn-procedural': () => {
+                        const modal = document.getElementById('proceduralSettingsModal');
+                        if (modal) {
+                            if (typeof openModal === 'function') {
+                                openModal(modal);
+                            } else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    },
+                    'btn-boss': () => {
+                        if (typeof initBossMode === 'function') {
+                            initBossMode();
+                            if (typeof hideModeSelect === 'function') hideModeSelect();
+                        } else {
+                            console.warn('[MainMenu] initBossMode not available');
+                        }
+                    },
+                    'btn-minigames': () => {
+                        const minigameButtons = document.querySelectorAll('.main-menu-btn-minigame');
+                        if (minigameButtons.length > 0) {
+                            minigameButtons[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => minigameButtons[0].focus(), 100);
+                        }
+                    },
+                    'minigameBtn_fruit_rush': () => {
+                        if (window.loadMinigame) window.loadMinigame('fruit_rush');
+                        else console.warn('[MainMenu] loadMinigame not available');
+                    },
+                    'minigameBtn_avoider': () => {
+                        if (window.loadMinigame) window.loadMinigame('avoider');
+                        else console.warn('[MainMenu] loadMinigame not available');
+                    },
+                    'minigameBtn_precision_bite': () => {
+                        if (window.loadMinigame) window.loadMinigame('precision_bite');
+                        else console.warn('[MainMenu] loadMinigame not available');
+                    },
+                    'btn-level-select': () => {
+                        if (window.showLevelSelect && typeof window.showLevelSelect === 'function') {
+                            window.showLevelSelect();
+                        } else {
+                            const modal = document.getElementById('levelSelectModal');
+                            if (modal && typeof openModal === 'function') openModal(modal);
+                        }
+                    },
+                    'btn-shop': () => {
+                        const modal = document.getElementById('shopModal');
+                        if (modal) {
+                            if (window.renderShop) window.renderShop();
+                            if (typeof openModal === 'function') openModal(modal);
+                            else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    },
+                    'btn-inventory': () => {
+                        const modal = document.getElementById('inventoryModal');
+                        if (modal) {
+                            if (window.renderInventory) window.renderInventory();
+                            if (typeof openModal === 'function') openModal(modal);
+                            else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    },
+                    'btn-missions': () => {
+                        const modal = document.getElementById('missionsModal');
+                        if (modal) {
+                            if (typeof renderMissions === 'function') renderMissions();
+                            else if (window.renderMissions) window.renderMissions();
+                            if (typeof openModal === 'function') openModal(modal);
+                            else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    },
+                    'btn-settings': () => {
+                        const modal = document.getElementById('settingsModal');
+                        if (modal) {
+                            if (typeof openModal === 'function') openModal(modal);
+                            else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    },
+                    'btn-themes': () => {
+                        const modal = document.getElementById('themesModal');
+                        if (modal) {
+                            if (typeof renderThemes === 'function') renderThemes();
+                            else if (window.renderThemes) window.renderThemes();
+                            if (typeof openModal === 'function') openModal(modal);
+                            else if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.openModal) {
+                                window.UnifiedButtonHandler.openModal(modal);
+                            }
+                        }
+                    }
+                };
+
+                // Register buttons with retry logic
+                let retryCount = 0;
+                const maxRetries = 10;
+                
+                function registerButtons() {
+                    let registeredCount = 0;
+                    
+                    Object.entries(buttons).forEach(([id, handler]) => {
+                        const btn = document.getElementById(id);
+                        if (btn && !btn._fallbackListenerRegistered) {
+                            // Use UnifiedButtonHandler if available, otherwise fallback
+                            if (window.UnifiedButtonHandler && window.UnifiedButtonHandler.registerButton) {
+                                window.UnifiedButtonHandler.registerButton(id, handler);
+                            } else {
+                                btn.addEventListener('click', handler);
+                            }
+                            btn._fallbackListenerRegistered = true;
+                            registeredCount++;
+                        }
+                    });
+                    
+                    // If ButtonRegistry is available, it will handle registration
+                    // This is just a fallback
+                    if (registeredCount > 0 && retryCount === 0) {
+                        console.log(`[MainMenu] Registered ${registeredCount} fallback button listeners`);
+                    }
+                    
+                    // Retry if some buttons are missing
+                    const missingButtons = Object.keys(buttons).filter(id => !document.getElementById(id));
+                    if (missingButtons.length > 0 && retryCount < maxRetries) {
+                        retryCount++;
+                        setTimeout(registerButtons, 200);
+                    }
+                }
+                
+                // Wait for DOM and ButtonRegistry
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(registerButtons, 300);
+                    });
+                } else {
+                    setTimeout(registerButtons, 300);
+                }
+                
+                // Also try after window load
+                window.addEventListener('load', () => {
+                    setTimeout(registerButtons, 500);
+                });
+            }
+            
+            // Ensure buttons are visible
+            function ensureButtonsVisible() {
+                const modeButtons = document.querySelector('.mode-buttons');
+                const menuButtons = document.querySelectorAll('.main-menu-btn');
+                
+                if (modeButtons) {
+                    modeButtons.style.setProperty('display', 'grid', 'important');
+                    modeButtons.style.setProperty('opacity', '1', 'important');
+                    modeButtons.style.setProperty('visibility', 'visible', 'important');
+                }
+                
+                menuButtons.forEach(btn => {
+                    btn.style.setProperty('opacity', '1', 'important');
+                    btn.style.setProperty('visibility', 'visible', 'important');
+                    btn.style.setProperty('display', 'flex', 'important');
+                });
+            }
+            
+            // Initialize
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    initializeMainMenuButtons();
+                    ensureButtonsVisible();
+                });
+            } else {
+                initializeMainMenuButtons();
+                ensureButtonsVisible();
+            }
+            
+            window.addEventListener('load', () => {
+                setTimeout(initializeMainMenuButtons, 100);
+                setTimeout(ensureButtonsVisible, 100);
+            });
+        })();
+    </script>
+    
+    <!-- Theme initialization script - ensures theme is synchronized after all scripts load -->
+    <script>
+        // Ensure theme is loaded and synchronized after page load
+        // This runs after all scripts are loaded to ensure theme is consistent
+        (function() {
+            const savedTheme = localStorage.getItem('snakeTheme') || 'dark';
+            const html = document.documentElement;
+            
+            // Sync data-theme and class
+            html.setAttribute('data-theme', savedTheme);
+            
+            // Ensure only one class is set
+            if (savedTheme === 'dark') {
+                html.classList.add('dark');
+                html.classList.remove('light');
+            } else {
+                html.classList.add('light');
+                html.classList.remove('dark');
+            }
+        })();
+    </script>
+</body>
+</html>

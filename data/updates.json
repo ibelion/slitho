@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "updates": [
+        {
+            "id": "update_1",
+            "version": "2.0.0",
+            "date": "2024-01-15",
+            "title": "Major Update: New Premium Features!",
+            "description": "We've added exciting new features to enhance your Slitho experience and increase engagement.",
+            "features": [
+                "Daily featured challenges with countdown timers",
+                "Player progression dashboard with stats and achievements",
+                "Modern UI redesign with glass morphism effects",
+                "Customizable theme presets (Neo, Vapor, Midnight, Carbon)",
+                "Built-in feedback and bug report widget",
+                "Interactive development roadmap",
+                "Enhanced SEO and social sharing",
+                "Premium branded loading experience"
+            ]
+        }
+    ]
+}
+

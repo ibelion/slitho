@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Mode - Slitho</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Prevent theme flashing on initial load -->
+    <style>
+        html { visibility: hidden; }
+        html.theme-ready { visibility: visible; }
+    </style>
+    <script>
+        // Load theme immediately before page renders to prevent flash
+        (function() {
+            const saved = localStorage.getItem('snakeTheme') || 'dark';
+            const html = document.documentElement;
+            
+            // Set data-theme attribute
+            html.setAttribute('data-theme', saved);
+            
+            // Set dark/light class and remove opposite
+            if (saved === 'dark') {
+                html.classList.add('dark');
+                html.classList.remove('light');
+            } else {
+                html.classList.add('light');
+                html.classList.remove('dark');
+            }
+            
+            // Mark as ready to show
+            html.classList.add('theme-ready');
+        })();
+    </script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="classicLoadingScreen" class="classic-loading-screen">
+        <div class="loading-brand">
+            <div class="loading-logo">🐍</div>
+            <h1 class="loading-title">Slitho</h1>
+        </div>
+        <div class="loading-progress-container">
+            <div class="loading-progress-bar">
+                <div id="loadingProgressBar" class="loading-progress-fill"></div>
+            </div>
+            <div id="loadingStatus" class="loading-status">Initializing...</div>
+        </div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Error Fallback UI -->
+    <div id="classicErrorOverlay" class="classic-error-overlay" style="display: none;">
+        <div class="classic-error-content">
+            <div class="error-icon">⚠️</div>
+            <h2 class="error-title">Classic Mode failed to load.</h2>
+            <p class="error-message">The game encountered an issue while loading Classic Mode. Please try again or return to the main menu.</p>
+            <div class="error-buttons">
+                <button id="retryClassicBtn" class="btn">Retry</button>
+                <button id="mainMenuBtn" class="btn btn-secondary">Return to Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Screen (will be populated by game.js) -->
+    <div id="gameScreen" class="game-screen" style="display: none;">
+        <header class="header">
+            <h1 class="app-logo">
+                <span class="app-logo-icon">🐍</span>
+                <span class="app-logo-text">Slitho</span>
+            </h1>
+            <div class="header-controls">
+                <button id="modeSelectBtn" class="icon-btn" aria-label="Mode Select">🏠</button>
+                <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌓</button>
+                <button id="soundToggle" class="icon-btn" aria-label="Toggle sound">🔊</button>
+                <button id="pauseBtn" class="icon-btn" aria-label="Pause">⏸</button>
+                <button id="restartBtn" class="btn">Restart</button>
+            </div>
+        </header>
+        
+        <main class="main">
+            <!-- Floating HUD -->
+            <div class="hud-container">
+                <div class="hud-item score-hud">
+                    <span class="hud-label">Score</span>
+                    <span id="score" class="hud-value">0</span>
+                </div>
+                <div class="hud-item coins-hud">
+                    <span class="hud-icon">🪙</span>
+                    <span class="hud-label">Coins</span>
+                    <span id="coins" class="hud-value">0</span>
+                </div>
+                <div class="hud-item player-level-hud">
+                    <span class="hud-label">Level</span>
+                    <span id="playerLevel" class="hud-value">1</span>
+                </div>
+                <div class="hud-item level-hud" id="levelHud">
+                    <span class="hud-label">Level</span>
+                    <span id="level" class="hud-value">1</span>
+                    <span class="hud-subtext" id="targetScore">/ 5</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="gameCanvas"></canvas>
+                <canvas id="particleCanvas"></canvas>
+                <div id="gameOverOverlay" class="game-over-overlay">
+                    <div class="game-over-content">
+                        <h2>Game Over!</h2>
+                        <p>Final Score: <span id="finalScore">0</span></p>
+                        <p id="finalLevelText">Level Reached: <span id="finalLevel">1</span></p>
+                        <p class="hint">Press Restart or use arrow keys to play again</p>
+                    </div>
+                </div>
+                <div id="levelCompleteOverlay" class="level-complete-overlay">
+                    <div class="level-complete-content">
+                        <h2>Level <span id="completeLevel">1</span> Complete!</h2>
+                    </div>
+                </div>
+                <div id="pauseOverlay" class="pause-overlay">
+                    <div class="pause-content">
+                        <h2>Paused</h2>
+                        <p>Press P or tap pause to resume</p>
+                    </div>
+                </div>
+            </div>
+            <div id="controlPad" class="control-pad">
+                <button class="control-btn" data-direction="up" aria-label="Up">↑</button>
+                <div class="control-row">
+                    <button class="control-btn" data-direction="left" aria-label="Left">←</button>
+                    <button class="control-btn" data-direction="down" aria-label="Down">↓</button>
+                    <button class="control-btn" data-direction="right" aria-label="Right">→</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>Desktop: Arrow Keys or WASD (P to Pause) | Mobile: Swipe or Control Pad</p>
+        </footer>
+    </div>
+
+    <!-- Load all necessary dependencies first -->
+    <script src="cutscenes.js"></script>
+    <script src="seasonal.js"></script>
+    <script src="worldmap.js"></script>
+    <script src="minigames/index.js"></script>
+    <script src="progression.js"></script>
+    <script src="items.js"></script>
+    <script src="item-unlocks.js"></script>
+    <script src="item-effects.js"></script>
+    <script src="inventory-ui.js"></script>
+    <script src="shop-ui.js"></script>
+    <script src="progression-summary.js"></script>
+    <script src="config/balance.js"></script>
+    
+    <!-- Defensive Utilities (load first) -->
+    <script src="systems/defensive-utils.js"></script>
+    
+    <!-- Core Systems -->
+    <script src="systems/module-loader.js"></script>
+    <script src="systems/initialization-manager.js"></script>
+    <script src="systems/stateManager.js"></script>
+    <script src="systems/tick-engine.js"></script>
+    <script src="systems/error-handler.js"></script>
+    <script src="systems/robust-save-system.js"></script>
+    <script src="systems/animation-manager.js"></script>
+    <script src="systems/home-animations.js"></script>
+    <script src="systems/audio-manager.js"></script>
+    <script src="systems/accessibility.js"></script>
+    <script src="systems/performance-protection.js"></script>
+    
+    <!-- Asset Loading -->
+    <script src="systems/asset-loader.js"></script>
+    
+    <!-- Progression -->
+    <script src="progression.js"></script>
+    <script src="skillTree.js"></script>
+    
+    <!-- Rendering -->
+    <script src="renderer.js"></script>
+    <script src="snakeAnimator.js"></script>
+    <script src="cameraShake.js"></script>
+    
+    <!-- Systems -->
+    <script src="systems/particle-system.js"></script>
+    <script src="systems/hit-feedback.js"></script>
+    <script src="systems/global-modifiers.js"></script>
+    <script src="systems/debug-tools.js"></script>
+    <script src="systems/profiler.js"></script>
+    <script src="systems/gamepad.js"></script>
+    <script src="systems/ghostReplay.js"></script>
+    
+    <!-- Content -->
+    <script src="content/hazards.js"></script>
+    <script src="content/food-types.js"></script>
+    
+    <!-- UI -->
+    <script src="ui.js"></script>
+
+    <!-- Featured Challenge Module -->
+    <script src="systems/featured-challenge.js"></script>
+    
+    <!-- Progression Dashboard -->
+    <script src="systems/progression-dashboard.js"></script>
+    
+    <!-- What's New Update Panel -->
+    <script src="systems/whats-new.js"></script>
+    
+    <!-- Theme Presets -->
+    <script src="systems/theme-presets.js"></script>
+    
+    <!-- Feedback Widget -->
+    <script src="systems/feedback-widget.js"></script>
+    
+    <!-- Roadmap -->
+    <script src="systems/roadmap.js"></script>
+    
+    <!-- Social Share -->
+    <script src="systems/social-share.js"></script>
+    
+    <!-- Cloud sync -->
+    <script src="cloud-sync.js"></script>
+    
+    <!-- Game loop and performance -->
+    <script src="performance-settings.js"></script>
+    <script src="canvas-optimization.js"></script>
+    
+    <!-- Phase 7: Multiplayer Systems -->
+    <script src="systems/player-identity.js"></script>
+    <script src="systems/sync-safe-engine.js"></script>
+    <script src="systems/local-multiplayer.js"></script>
+    <script src="systems/network-client.js"></script>
+    <script src="systems/multiplayer-controller.js"></script>
+    
+    <!-- Phase 8: Mobile & Touch Support -->
+    <script src="systems/touch-input.js"></script>
+    <script src="systems/gamepad-input.js"></script>
+    <script src="systems/mobile-ui.js"></script>
+    <script src="systems/performance-scaler.js"></script>
+    <script src="systems/save-sync.js"></script>
+    <script src="systems/battery-optimizer.js"></script>
+    
+    <!-- Phase 9: AI Bosses & Story Mode -->
+    <script src="systems/boss-ai.js"></script>
+    <script src="systems/boss-encounters.js"></script>
+    <script src="systems/story-mode.js"></script>
+    <script src="systems/story-progression.js"></script>
+    <script src="systems/narrative-tools.js"></script>
+    
+    <!-- Phase 7+: Engine Stability & Future-Proofing -->
+    <script src="systems/unified-input-router.js"></script>
+    <script src="systems/mode-compatibility-checker.js"></script>
+    <script src="systems/expansion-api.js"></script>
+    
+    <!-- Button System -->
+    <script src="systems/unified-button-handler.js"></script>
+    <script src="systems/button-registry.js"></script>
+    
+    <!-- Game logic (loads last, depends on all modules) -->
+    <script src="game.js"></script>
+
+    <!-- UI: Hotkey helper -->
+    <script src="ui-hotkeys.js"></script>
+    
+    <!-- Initialize systems (similar to index.html but for Classic Mode) -->
+    <script>
+        // Initialize on load with proper order
+        window.addEventListener('load', async () => {
+            try {
+                console.log('[ClassicMode] INIT: DOM → OK');
+
+                // Initialize initialization manager
+                if (window.InitManager) {
+                    // Register essential modules (simplified for Classic Mode)
+                    if (window.ErrorHandler) window.InitManager.register('ErrorHandler', () => window.ErrorHandler.init());
+                    if (window.DefensiveUtils) window.InitManager.register('DefensiveUtils', () => {});
+                    if (window.ModuleLoader) window.InitManager.register('ModuleLoader', () => {});
+                    if (window.StateManager) window.InitManager.register('StateManager', () => {});
+                    if (window.RobustSaveSystem) window.InitManager.register('SaveSystem', () => window.RobustSaveSystem.init());
+                    if (window.Progression) window.InitManager.register('Progression', () => window.Progression.initialize());
+                    if (window.SkillTree) window.InitManager.register('SkillTree', () => window.SkillTree.initialize());
+                    if (window.AssetLoader) window.InitManager.register('AssetLoader', async () => {
+                        console.log('[ClassicMode] INIT: AssetLoader → starting');
+                        window.AssetLoader.init();
+                        if (window.AssetLoader.loadAll) {
+                            await window.AssetLoader.loadAll();
+                        }
+                        console.log('[ClassicMode] INIT: AssetLoader → OK');
+                    });
+                    if (window.ParticleSystem) window.InitManager.register('ParticleSystem', () => window.ParticleSystem.init());
+                    if (window.HitFeedback) window.InitManager.register('HitFeedback', () => window.HitFeedback.init());
+                    if (window.CameraShake) window.InitManager.register('CameraShake', () => window.CameraShake.init());
+                    if (window.TickEngine) window.InitManager.register('TickEngine', () => {});
+                    if (window.Renderer) window.InitManager.register('Renderer', () => {
+                        const canvas = document.getElementById('gameCanvas');
+                        const ctx = canvas ? canvas.getContext('2d') : null;
+                        const particleCanvas = document.getElementById('particleCanvas');
+                        const particleCtx = particleCanvas ? particleCanvas.getContext('2d') : null;
+                        if (canvas && ctx) {
+                            window.Renderer.init(canvas, ctx, particleCanvas, particleCtx, 20, 20, 20);
+                        }
+                    });
+                    if (window.SnakeAnimator) window.InitManager.register('SnakeAnimator', () => window.SnakeAnimator.init());
+                    if (window.Gamepad) window.InitManager.register('Gamepad', () => window.Gamepad.init());
+                    if (window.GhostReplay) window.InitManager.register('GhostReplay', () => window.GhostReplay.init());
+                    if (window.GlobalModifiers) window.InitManager.register('GlobalModifiers', () => {});
+                    if (window.DebugTools) window.InitManager.register('DebugTools', () => window.DebugTools.init());
+                    if (window.UI) window.InitManager.register('UI', () => window.UI.initialize());
+                    if (window.Accessibility) window.InitManager.register('Accessibility', () => window.Accessibility.init());
+                    if (window.AudioManager) window.InitManager.register('AudioManager', () => window.AudioManager.init());
+                    if (window.AnimationManager) window.InitManager.register('AnimationManager', () => window.AnimationManager.init());
+                    if (window.PerformanceProtection) window.InitManager.register('PerformanceProtection', () => window.PerformanceProtection.init());
+                    
+                    // Register Game boot - but don't show mode select, Classic Mode will be initialized by classic.js
+                    if (window.initGame) {
+                        window.InitManager.register('Game', () => {
+                            console.log('[ClassicMode] INIT: Modules Loaded → OK');
+                            try {
+                                window.initGame();
+                            } catch (e) {
+                                console.error('[ClassicMode] INIT: Game failed to initialize:', e);
+                                if (window.ErrorHandler) {
+                                    window.ErrorHandler.handle(e, 'Game Initialization', 0);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Initialize all in order
+                    await window.InitManager.initializeAll();
+                } else {
+                    // Fallback: initialize manually
+                    if (window.ErrorHandler) window.ErrorHandler.init();
+                    if (window.AssetLoader) {
+                        console.log('[ClassicMode] INIT: AssetLoader → starting (fallback)');
+                        window.AssetLoader.init();
+                        if (window.AssetLoader.loadAll) {
+                            await window.AssetLoader.loadAll();
+                        }
+                        console.log('[ClassicMode] INIT: AssetLoader → OK (fallback)');
+                    }
+                    if (window.ParticleSystem) window.ParticleSystem.init();
+                    if (window.HitFeedback) window.HitFeedback.init();
+                    if (window.RobustSaveSystem) window.RobustSaveSystem.init();
+                    if (window.Accessibility) window.Accessibility.init();
+                    if (window.AudioManager) window.AudioManager.init();
+                    if (window.AnimationManager) window.AnimationManager.init();
+                    if (window.PerformanceProtection) window.PerformanceProtection.init();
+                    if (window.DebugTools) window.DebugTools.init();
+
+                    // Finally boot the game if InitManager is not available
+                    if (window.initGame) {
+                        console.log('[ClassicMode] INIT: Modules Loaded → OK (fallback)');
+                        try {
+                            window.initGame();
+                        } catch (e) {
+                            console.error('[ClassicMode] INIT: Game failed to initialize (fallback):', e);
+                            if (window.ErrorHandler) {
+                                window.ErrorHandler.handle(e, 'Game Initialization (Fallback)', 0);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('[ClassicMode] Initialization error:', e);
+                if (window.ErrorHandler) {
+                    window.ErrorHandler.handle(e, 'Initialization', 0);
+                }
+            }
+        });
+
+        // Safety timeout: if boot takes too long, force-start the game
+        setTimeout(() => {
+            if (!window.__GAME_READY__ && window.initGame) {
+                console.warn('[ClassicMode] INIT: Timeout reached, forcing game start');
+                try {
+                    window.initGame();
+                } catch (e) {
+                    console.error('[ClassicMode] INIT: Game failed to initialize (timeout):', e);
+                    if (window.ErrorHandler) {
+                        window.ErrorHandler.handle(e, 'Game Initialization (Timeout)', 0);
+                    }
+                }
+            }
+        }, 1500);
+    </script>
+    
+    <!-- Classic Mode Fallback Loader -->
+    <script>
+        (function() {
+            'use strict';
+            
+            // Global flag to track if Classic Mode has loaded
+            window.classicLoaded = false;
+            
+            // Timeout duration in milliseconds (3 seconds as specified)
+            const LOAD_TIMEOUT = 3000;
+            
+            // References to UI elements
+            const loadingScreen = document.getElementById('classicLoadingScreen');
+            const errorOverlay = document.getElementById('classicErrorOverlay');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const retryBtn = document.getElementById('retryClassicBtn');
+            const mainMenuBtn = document.getElementById('mainMenuBtn');
+            
+            let loadTimeout = null;
+            let currentScript = null;
+            let retryCount = 0;
+            const MAX_RETRIES = 3;
+            
+            // Update loading status
+            function updateLoadingStatus(message) {
+                if (loadingStatus) {
+                    loadingStatus.textContent = message;
+                }
+            }
+            
+            // Show error UI
+            function showErrorUI() {
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                }
+                if (errorOverlay) {
+                    errorOverlay.style.display = 'flex';
+                }
+            }
+            
+            // Hide error UI
+            function hideErrorUI() {
+                if (errorOverlay) {
+                    errorOverlay.style.display = 'none';
+                }
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'flex';
+                }
+            }
+            
+            // Hide loading screen and show game
+            function hideLoadingScreen() {
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    loadingScreen.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        if (loadingScreen.parentNode) {
+                            loadingScreen.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            }
+            
+            // Check if Classic Mode has successfully initialized
+            function checkClassicLoaded() {
+                // Check if initClassicMode has run by checking the flag
+                if (window.classicLoaded === true) {
+                    clearTimeout(loadTimeout);
+                    hideLoadingScreen();
+                    return true;
+                }
+                return false;
+            }
+            
+            // Trigger fallback when load fails or times out
+            function triggerFallback(reason) {
+                console.error('[ClassicModeLoader] Fallback triggered:', reason);
+                clearTimeout(loadTimeout);
+                
+                // Remove any existing script
+                if (currentScript && currentScript.parentNode) {
+                    currentScript.parentNode.removeChild(currentScript);
+                    currentScript = null;
+                }
+                
+                updateLoadingStatus('Load failed');
+                showErrorUI();
+            }
+            
+            // Load classic.js dynamically
+            function loadClassicJS() {
+                // Reset flag
+                window.classicLoaded = false;
+                
+                // Clear any existing timeout
+                if (loadTimeout) {
+                    clearTimeout(loadTimeout);
+                }
+                
+                // Remove any existing script
+                if (currentScript && currentScript.parentNode) {
+                    currentScript.parentNode.removeChild(currentScript);
+                }
+                
+                updateLoadingStatus('Loading Classic Mode...');
+                hideErrorUI();
+                
+                // Create script element
+                currentScript = document.createElement('script');
+                currentScript.src = 'classic.js';
+                currentScript.async = true;
+                
+                // Success handler
+                const onClassicReady = function() {
+                    console.log('[ClassicModeLoader] classic.js loaded successfully');
+                    updateLoadingStatus('Initializing Classic Mode...');
+                    
+                    // Check immediately, then poll periodically until timeout
+                    // The main 3-second timeout will trigger fallback if initClassicMode doesn't run
+                    const checkInterval = setInterval(() => {
+                        if (checkClassicLoaded()) {
+                            clearInterval(checkInterval);
+                            console.log('[ClassicModeLoader] Classic Mode initialized successfully');
+                            updateLoadingStatus('Ready!');
+                        }
+                    }, 100);
+                    
+                    // Clear the polling interval when the main timeout would fire
+                    // (the timeout will clear itself if classicLoaded is true)
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                    }, LOAD_TIMEOUT);
+                };
+                
+                // Error handler
+                const onClassicLoadError = function() {
+                    console.error('[ClassicModeLoader] Failed to load classic.js');
+                    triggerFallback('Script load error');
+                };
+                
+                // Set up event listeners
+                currentScript.onload = onClassicReady;
+                currentScript.onerror = onClassicLoadError;
+                
+                // Add timeout fallback
+                loadTimeout = setTimeout(() => {
+                    if (!window.classicLoaded) {
+                        triggerFallback('Timeout: initClassicMode did not run within ' + LOAD_TIMEOUT + 'ms');
+                    }
+                }, LOAD_TIMEOUT);
+                
+                // Append script to document
+                document.head.appendChild(currentScript);
+            }
+            
+            // Retry button handler
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    if (retryCount >= MAX_RETRIES) {
+                        alert('Maximum retry attempts reached. Please return to the main menu.');
+                        return;
+                    }
+                    retryCount++;
+                    console.log('[ClassicModeLoader] Retry attempt', retryCount);
+                    loadClassicJS();
+                });
+            }
+            
+            // Main menu button handler
+            if (mainMenuBtn) {
+                mainMenuBtn.addEventListener('click', function() {
+                    console.log('[ClassicModeLoader] Returning to main menu');
+                    window.location.href = 'index.html';
+                });
+            }
+            
+            // Initialize when DOM is ready
+            function initClassicLoader() {
+                // Wait for game.js and initGame to be loaded and initialized
+                if ((typeof initClassicMode === 'undefined' && typeof window.initClassicMode === 'undefined') ||
+                    (typeof initGame === 'undefined' && typeof window.initGame === 'undefined')) {
+                    // Wait a bit more for game.js to load
+                    setTimeout(initClassicLoader, 100);
+                    return;
+                }
+                
+                console.log('[ClassicModeLoader] Starting Classic Mode load');
+                updateLoadingStatus('Initializing...');
+                
+                // Start loading classic.js after a delay to ensure all dependencies are loaded and initGame has run
+                setTimeout(() => {
+                    loadClassicJS();
+                }, 1000);
+            }
+            
+            // Start initialization when page loads (after initGame has had time to run)
+            window.addEventListener('load', () => {
+                setTimeout(initClassicLoader, 500);
+            });
+            
+            // Also try on DOMContentLoaded as backup
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(initClassicLoader, 1500);
+                });
+            } else {
+                setTimeout(initClassicLoader, 1500);
+            }
+        })();
+    </script>
+    
+    <!-- Additional styles for Classic Mode loader -->
+    <style>
+        .classic-loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        .classic-error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        
+        .classic-error-content {
+            background: var(--bg-secondary, #1a1a1a);
+            border: 2px solid var(--border-color, #4CAF50);
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .error-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--text-primary, #fff);
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            color: var(--text-secondary, #b0b0b0);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .error-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .error-buttons .btn {
+            min-width: 150px;
+            padding: 12px 24px;
+        }
+        
+        .error-buttons .btn-secondary {
+            background: var(--bg-tertiary, #252525);
+            color: var(--text-primary, #fff);
+        }
+        
+        .error-buttons .btn-secondary:hover {
+            background: var(--bg-elevated, #2a2a2a);
+        }
+        
+        .loading-brand {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease;
+        }
+        
+        .loading-logo {
+            font-size: 4em;
+            animation: pulse 2s ease-in-out infinite;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .loading-title {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4CAF50, #66bb6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        
+        .loading-progress-container {
+            width: 400px;
+            max-width: 90%;
+            margin-bottom: 30px;
+        }
+        
+        .loading-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .loading-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #66bb6a);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .loading-status {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</body>
+</html>
+

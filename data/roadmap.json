@@ -1,0 +1,54 @@
+{
+    "items": [
+        {
+            "id": "roadmap_1",
+            "title": "Multiplayer Mode",
+            "description": "Real-time multiplayer battles and cooperative gameplay",
+            "status": "planned",
+            "category": "Gameplay"
+        },
+        {
+            "id": "roadmap_2",
+            "title": "New Boss Encounters",
+            "description": "Additional challenging boss fights with unique mechanics",
+            "status": "in_progress",
+            "category": "Content"
+        },
+        {
+            "id": "roadmap_3",
+            "title": "Daily Challenges",
+            "description": "Featured daily challenges with special rewards",
+            "status": "completed",
+            "category": "Features"
+        },
+        {
+            "id": "roadmap_4",
+            "title": "Player Progression Dashboard",
+            "description": "Comprehensive stats and achievement tracking",
+            "status": "completed",
+            "category": "Features"
+        },
+        {
+            "id": "roadmap_5",
+            "title": "Customizable UI Themes",
+            "description": "Multiple UI theme presets for personalization",
+            "status": "completed",
+            "category": "UI/UX"
+        },
+        {
+            "id": "roadmap_6",
+            "title": "Leaderboard System",
+            "description": "Global and friends leaderboards",
+            "status": "planned",
+            "category": "Social"
+        },
+        {
+            "id": "roadmap_7",
+            "title": "Seasonal Events",
+            "description": "Limited-time events with exclusive rewards",
+            "status": "planned",
+            "category": "Content"
+        }
+    ]
+}
+
