@@ -1883,9 +1883,26 @@ p, body {
 
 .app-logo-icon {
     font-size: 1.2em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
+    height: 1.2em;
+    width: auto;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.app-logo-icon img {
+    height: 100%;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* If logo-icon is directly an img, not a container */
+img.app-logo-icon {
+    height: 1.2em;
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .app-logo-text {
@@ -1951,6 +1968,8 @@ p, body {
     font-size: var(--font-lg);
     min-height: 60px;
     display: flex;
+    /* Ensure buttons remain clickable even when opacity is 0 during animation */
+    pointer-events: auto !important;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -2033,6 +2052,16 @@ p, body {
 .main-menu-btn-minigame:hover:not(:disabled) {
     background: linear-gradient(135deg, var(--color-secondary-dark) 0%, var(--color-secondary) 100%);
     border-color: var(--color-secondary-light);
+}
+
+/* Ensure buttons with opacity:0 are still clickable (for animation purposes) */
+.btn[style*="opacity: 0"],
+.btn[style*="opacity:0"],
+.main-menu-btn[style*="opacity: 0"],
+.main-menu-btn[style*="opacity:0"],
+.mode-card-play-btn[style*="opacity: 0"],
+.mode-card-play-btn[style*="opacity:0"] {
+    pointer-events: auto !important;
 }
 
 /* Button content */
@@ -4947,10 +4976,18 @@ h2 {
 @keyframes subtlePulse {
     0%, 100% { 
         transform: scale(1); 
+        opacity: 1;
     }
     50% { 
         transform: scale(1.05); 
+        opacity: 0.95;
     }
+}
+
+/* Ensure logo pulse animation works smoothly */
+.app-logo-icon[data-pulse-setup="true"] {
+    will-change: transform;
+    transform-origin: center center;
 }
 
 /* Enhanced button transitions for mode select */
@@ -5444,6 +5481,8 @@ textarea:focus-visible {
     position: relative;
     overflow: hidden;
     z-index: 2;
+    /* Ensure buttons remain clickable even when opacity is 0 during animation */
+    pointer-events: auto !important;
 }
 
 .mode-card-play-btn::before {

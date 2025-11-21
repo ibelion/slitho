@@ -953,18 +953,35 @@ function setLevel(level) {
 
 // Start classic mode (for level select integration)
 function startClassicMode() {
+    console.log('[startClassicMode] Starting Classic Mode');
     classicMode = true;
     endlessMode = false;
     proceduralMode = false;
     bossMode = false;
     
-    hideModeSelect();
+    // Sync with StateManager
+    if (window.StateManager) {
+        window.StateManager.setEndlessMode(false);
+        window.StateManager.setClassicMode(true);
+        window.StateManager.setCurrentLevel(1);
+    }
+    
+    // Hide mode select and show game screen
+    if (typeof hideModeSelect === 'function') {
+        hideModeSelect();
+    }
+    
     // Re-query gameScreen in case const was null
     const gameScreenEl = gameScreen || document.getElementById('gameScreen');
     if (gameScreenEl) {
         gameScreenEl.style.setProperty('display', 'flex', 'important');
     }
+    
+    // Initialize game
+    currentLevel = 1;
+    targetScore = getCurrentLevelConfig().targetScore;
     updateUI();
+    init();
 }
 
 // ==================== SKIN SYSTEM ====================
@@ -1439,6 +1456,7 @@ function initEndlessMode() {
 }
 
 function initClassicMode() {
+    console.log('[initClassicMode] Starting Classic Mode');
     endlessMode = false;
     classicMode = true;
     currentLevel = 1;
@@ -1460,6 +1478,14 @@ function initClassicMode() {
     
     updateUI();
     init();
+    
+    // Hide mode select screen to show game
+    if (typeof hideModeSelect === 'function') {
+        console.log('[initClassicMode] Hiding mode select screen');
+        hideModeSelect();
+    } else {
+        console.warn('[initClassicMode] hideModeSelect function not available');
+    }
 }
 
 function updateEndlessMode() {
@@ -5069,6 +5095,15 @@ function showModeSelect() {
     // Load best score for display
     loadBestEndlessScore();
     
+    // Re-register buttons when mode select screen becomes visible
+    // This ensures buttons are properly registered, especially after dynamic content is created
+    if (window.ButtonRegistry && typeof window.ButtonRegistry.reregisterModeSelectButtons === 'function') {
+        setTimeout(() => {
+            console.log('[showModeSelect] Triggering ButtonRegistry re-registration');
+            window.ButtonRegistry.reregisterModeSelectButtons();
+        }, 150);
+    }
+    
     // Don't call init() here - it should only be called when actually starting a game
     // init() resets game state and should happen when a mode is selected, not when showing menu
 }
@@ -6271,3 +6306,7 @@ window.initGame = initGame;
 // Expose Classic Mode functions for classic.html loader
 window.initClassicMode = initClassicMode;
 window.startClassicMode = startClassicMode;
+
+// Expose mode select functions for ModeSelect system
+window.hideModeSelect = hideModeSelect;
+window.showModeSelect = showModeSelect;

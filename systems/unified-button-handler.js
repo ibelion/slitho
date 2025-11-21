@@ -73,8 +73,45 @@ const UnifiedButtonHandler = {
             options: options
         });
         
+        // PRESERVE inline styles before cloning to maintain visual state
+        // This is critical for HomeAnimations which sets opacity/transform
+        const inlineStyles = {
+            opacity: button.style.opacity,
+            transform: button.style.transform,
+            transition: button.style.transition,
+            pointerEvents: button.style.pointerEvents,
+            display: button.style.display,
+            visibility: button.style.visibility
+        };
+        
+        // Preserve data attributes (especially data-animated)
+        const dataAttributes = {};
+        Array.from(button.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-')) {
+                dataAttributes[attr.name] = attr.value;
+            }
+        });
+        
         // Remove existing listeners to prevent duplicates
         const newButton = button.cloneNode(true);
+        
+        // RE-APPLY inline styles to the clone to maintain visual consistency
+        Object.entries(inlineStyles).forEach(([prop, value]) => {
+            if (value && value !== '') {
+                newButton.style[prop] = value;
+            }
+        });
+        
+        // RE-APPLY data attributes to maintain state
+        Object.entries(dataAttributes).forEach(([name, value]) => {
+            newButton.setAttribute(name, value);
+        });
+        
+        // Ensure button has an ID for HomeAnimations to re-query after cloning
+        if (!newButton.id && buttonIdStr) {
+            newButton.id = buttonIdStr;
+        }
+        
         button.parentNode.replaceChild(newButton, button);
         
         // Add unified click handler

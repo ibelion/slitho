@@ -110,19 +110,48 @@ const HomeAnimations = {
         }
         
         // Stagger button animations
+        // Use selectors/IDs instead of direct references to survive button cloning
         buttons.forEach((btn, index) => {
-            if (btn.dataset.animated) return;
+            // Check if button is stuck at opacity:0 (might have been cloned)
+            const currentOpacity = window.getComputedStyle(btn).opacity;
+            const isStuckInvisible = currentOpacity === '0' || btn.style.opacity === '0';
+            
+            // If button is stuck invisible, clear data-animated to allow re-animation
+            if (isStuckInvisible && btn.dataset.animated) {
+                console.log(`[HomeAnimations] Button ${btn.id || index} stuck at opacity:0, clearing data-animated for re-animation`);
+                delete btn.dataset.animated;
+            }
+            
+            // Skip if already animated and not stuck
+            if (btn.dataset.animated && !isStuckInvisible) return;
+            
+            // Ensure button has an ID for re-querying after potential cloning
+            const btnId = btn.id || btn.getAttribute('data-button-id') || `btn-anim-${index}-${Date.now()}`;
+            if (!btn.id && btnId) {
+                btn.id = btnId;
+            }
+            
             btn.dataset.animated = 'true';
             
             // Set initial state
             btn.style.opacity = '0';
             btn.style.transform = 'translateY(20px) scale(0.95)';
+            btn.style.pointerEvents = 'auto'; // Keep clickable even when invisible
             btn.style.transition = `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s`;
             
             // Ensure buttons become visible with multiple fallbacks
+            // Re-query button by ID in case it was cloned by UnifiedButtonHandler
             const makeVisible = () => {
-                btn.style.opacity = '1';
-                btn.style.transform = 'translateY(0) scale(1)';
+                // Re-query the button by ID in case it was cloned
+                const currentBtn = btnId ? document.getElementById(btnId) : btn;
+                const btnToAnimate = currentBtn || btn;
+                
+                // Only animate if button still exists in DOM
+                if (btnToAnimate && btnToAnimate.parentNode) {
+                    btnToAnimate.style.opacity = '1';
+                    btnToAnimate.style.transform = 'translateY(0) scale(1)';
+                    btnToAnimate.style.pointerEvents = 'auto'; // Ensure button is clickable
+                }
             };
             
             requestAnimationFrame(() => {
@@ -202,35 +231,42 @@ const HomeAnimations = {
     setupCardAnimations: function() {
         if (this.reducedMotion) return;
         
-        // Add subtle pulse to logo icon
-        const logoIcon = document.querySelector('.app-logo-icon');
-        if (logoIcon && !logoIcon.dataset.pulseSetup) {
-            logoIcon.dataset.pulseSetup = 'true';
+        // Add subtle pulse to logo icon in mode select screen only
+        const logoIcons = document.querySelectorAll('.app-logo-icon');
+        logoIcons.forEach(logoIcon => {
+            // Only setup pulse for logo in mode select screen
+            const isInModeSelect = logoIcon.closest('#modeSelectScreen') || 
+                                  logoIcon.closest('.mode-select-screen') ||
+                                  logoIcon.closest('.main-menu-header');
             
-            // Only animate when mode select is visible
-            const checkVisibility = () => {
-                const modeSelectScreen = document.getElementById('modeSelectScreen');
-                if (modeSelectScreen) {
-                    const inlineDisplay = modeSelectScreen.style.display;
-                    const computedDisplay = window.getComputedStyle(modeSelectScreen).display;
-                    const hasDataGameActive = modeSelectScreen.hasAttribute('data-game-active');
-                    const isVisible = (inlineDisplay !== 'none' && inlineDisplay !== '') || 
-                                     (computedDisplay !== 'none' && !hasDataGameActive);
-                    
-                    if (isVisible) {
-                        logoIcon.style.animation = 'subtlePulse 2s ease-in-out infinite';
+            if (isInModeSelect && !logoIcon.dataset.pulseSetup) {
+                logoIcon.dataset.pulseSetup = 'true';
+                
+                // Only animate when mode select is visible
+                const checkVisibility = () => {
+                    const modeSelectScreen = document.getElementById('modeSelectScreen');
+                    if (modeSelectScreen) {
+                        const inlineDisplay = modeSelectScreen.style.display;
+                        const computedDisplay = window.getComputedStyle(modeSelectScreen).display;
+                        const hasDataGameActive = modeSelectScreen.hasAttribute('data-game-active');
+                        const isVisible = (inlineDisplay !== 'none' && inlineDisplay !== '') || 
+                                         (computedDisplay !== 'none' && !hasDataGameActive);
+                        
+                        if (isVisible) {
+                            logoIcon.style.animation = 'subtlePulse 2s ease-in-out infinite';
+                        } else {
+                            logoIcon.style.animation = 'none';
+                        }
                     } else {
                         logoIcon.style.animation = 'none';
                     }
-                } else {
-                    logoIcon.style.animation = 'none';
-                }
-            };
-            
-            // Check periodically
-            setInterval(checkVisibility, 100);
-            checkVisibility();
-        }
+                };
+                
+                // Check periodically
+                setInterval(checkVisibility, 100);
+                checkVisibility();
+            }
+        });
     },
     
     // Public method to re-initialize when needed

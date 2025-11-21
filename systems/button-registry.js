@@ -61,6 +61,15 @@ const ButtonRegistry = {
         this.registerControlPadButtons();
         
         console.log(`[ButtonRegistry] Registered ${this.registeredButtons.size} buttons`);
+        
+        // Trigger HomeAnimations to re-run after buttons are cloned
+        // This ensures animations work on cloned buttons from UnifiedButtonHandler
+        setTimeout(() => {
+            if (window.HomeAnimations && typeof window.HomeAnimations.animateEntrance === 'function') {
+                console.log('[ButtonRegistry] Triggering HomeAnimations re-animation after button registration');
+                window.HomeAnimations.animateEntrance();
+            }
+        }, 200);
     },
     
     // Register mode select buttons (main menu buttons)
@@ -72,28 +81,60 @@ const ButtonRegistry = {
         
         const handler = window.UnifiedButtonHandler;
 
-        // Helper function to safely register a button
+        // Helper function to safely register a button with retry logic
         const registerButtonSafe = (buttonId, callback, fallbackCallback = null) => {
-            const btn = document.getElementById(buttonId);
-            if (btn) {
-                handler.registerButton(buttonId, () => {
-                    try {
-                        callback();
-                    } catch (error) {
-                        console.warn(`[ButtonRegistry] Error handling ${buttonId}:`, error);
-                        if (fallbackCallback) {
-                            try {
-                                fallbackCallback();
-                            } catch (fallbackError) {
-                                console.error(`[ButtonRegistry] Fallback also failed for ${buttonId}:`, fallbackError);
+            const attemptRegistration = (isRetry = false) => {
+                const btn = document.getElementById(buttonId);
+                if (btn) {
+                    const result = handler.registerButton(buttonId, () => {
+                        try {
+                            callback();
+                        } catch (error) {
+                            console.warn(`[ButtonRegistry] Error handling ${buttonId}:`, error);
+                            if (fallbackCallback) {
+                                try {
+                                    fallbackCallback();
+                                } catch (fallbackError) {
+                                    console.error(`[ButtonRegistry] Fallback also failed for ${buttonId}:`, fallbackError);
+                                }
                             }
                         }
+                    });
+                    
+                    if (result) {
+                        this.registeredButtons.set(buttonId, true);
+                        if (isRetry) {
+                            console.log(`[ButtonRegistry] ✓ Successfully registered on retry: ${buttonId}`);
+                        } else {
+                            console.log(`[ButtonRegistry] ✓ Successfully registered: ${buttonId}`);
+                        }
+                        return true;
+                    } else {
+                        console.warn(`[ButtonRegistry] ✗ Failed to register: ${buttonId} - UnifiedButtonHandler returned false`);
+                        return false;
                     }
-                });
-                this.registeredButtons.set(buttonId, true);
-            } else {
-                console.warn(`[ButtonRegistry] ${buttonId} not found in DOM`);
+                } else {
+                    if (!isRetry) {
+                        console.warn(`[ButtonRegistry] ${buttonId} not found in DOM - will retry in 500ms`);
+                    }
+                    return false;
+                }
+            };
+            
+            // Try immediate registration
+            const success = attemptRegistration(false);
+            
+            // If failed, retry after delay
+            if (!success) {
+                setTimeout(() => {
+                    const retrySuccess = attemptRegistration(true);
+                    if (!retrySuccess) {
+                        console.error(`[ButtonRegistry] ✗ Failed to register after retry: ${buttonId}`);
+                    }
+                }, 500);
             }
+            
+            return success;
         };
 
         // Game Mode Buttons
@@ -538,6 +579,54 @@ const ButtonRegistry = {
     // Get registered button count
     getRegisteredCount: function() {
         return this.registeredButtons.size;
+    },
+    
+    // Re-register all buttons (useful after dynamic content is added)
+    reregisterAllButtons: function() {
+        console.log('[ButtonRegistry] Re-registering all buttons...');
+        const previousCount = this.registeredButtons.size;
+        this.registeredButtons.clear();
+        this.registerAllButtons();
+        console.log(`[ButtonRegistry] Re-registration complete. Previous: ${previousCount}, Now: ${this.registeredButtons.size}`);
+    },
+    
+    // Re-register mode select buttons only
+    reregisterModeSelectButtons: function() {
+        console.log('[ButtonRegistry] Re-registering mode select buttons...');
+        
+        // List of mode select button IDs to re-register
+        const modeSelectButtonIds = [
+            'btn-classic', 'btn-endless', 'btn-procedural', 'btn-boss', 
+            'btn-minigames', 'btn-level-select', 'btn-shop', 'btn-missions', 
+            'btn-inventory', 'btn-settings', 'btn-themes',
+            'minigameBtn_fruit_rush', 'minigameBtn_avoider', 'minigameBtn_precision_bite',
+            'progressionDashboardBtn', 'roadmapBtn'
+        ];
+        
+        // Remove existing registrations for these buttons
+        let removedCount = 0;
+        modeSelectButtonIds.forEach(id => {
+            if (this.registeredButtons.has(id)) {
+                this.registeredButtons.delete(id);
+                removedCount++;
+            }
+        });
+        
+        console.log(`[ButtonRegistry] Removed ${removedCount} existing registrations`);
+        
+        // Re-register mode select buttons
+        this.registerModeSelectButtons();
+        
+        console.log(`[ButtonRegistry] Mode select re-registration complete. Total registered: ${this.registeredButtons.size}`);
+        
+        // Trigger HomeAnimations to re-run after re-registration
+        // This ensures animations work on newly cloned buttons
+        setTimeout(() => {
+            if (window.HomeAnimations && typeof window.HomeAnimations.animateEntrance === 'function') {
+                console.log('[ButtonRegistry] Triggering HomeAnimations re-animation after re-registration');
+                window.HomeAnimations.animateEntrance();
+            }
+        }, 200);
     }
 };
 

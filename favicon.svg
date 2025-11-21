@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="snakeGradientSmall" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#86efac;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="64" height="64" rx="14" fill="#0a0a0a"/>
+  
+  <!-- Main S shape (snake body) - scaled for 64x64 -->
+  <path d="M 22 8 
+           C 16 8, 11 13, 13 19 
+           C 15 25, 21 27, 27 27 
+           C 33 27, 38 27, 43 30 
+           C 48 33, 49 39, 46 45 
+           C 43 51, 37 53, 30 51" 
+        fill="url(#snakeGradientSmall)" 
+        stroke="#0a0a0a" 
+        stroke-width="1.5" 
+        stroke-linejoin="round" 
+        stroke-linecap="round"/>
+  
+  <!-- Eye -->
+  <circle cx="21" cy="13" r="3" fill="#ffffff"/>
+  <circle cx="21" cy="13" r="1.5" fill="#0a0a0a"/>
+  
+  <!-- Tongue -->
+  <path d="M 42 8 
+           C 45 6, 47 4, 48 5 
+           C 49 6, 48 9, 47 10 
+           C 46 11, 44 10, 42 8 Z" 
+        fill="#86efac" 
+        stroke="#0a0a0a" 
+        stroke-width="0.8" 
+        stroke-linejoin="round"/>
+</svg>

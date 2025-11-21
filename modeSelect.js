@@ -395,6 +395,15 @@ const ModeSelect = {
         
         // Register button handlers
         this.registerModeCardHandlers();
+        
+        // Re-register all mode select buttons with ButtonRegistry after dynamic content is created
+        // This ensures buttons created dynamically are properly registered
+        if (window.ButtonRegistry && typeof window.ButtonRegistry.reregisterModeSelectButtons === 'function') {
+            setTimeout(() => {
+                console.log('[ModeSelect] Triggering ButtonRegistry re-registration after mode cards rendered');
+                window.ButtonRegistry.reregisterModeSelectButtons();
+            }, 100);
+        }
     },
     
     // Create a mode card element
@@ -434,25 +443,50 @@ const ModeSelect = {
     registerModeCardHandlers: function() {
         const playButtons = document.querySelectorAll('.mode-card-play-btn');
         
-        playButtons.forEach(button => {
+        console.log(`[ModeSelect] Registering handlers for ${playButtons.length} mode card buttons`);
+        
+        playButtons.forEach((button, index) => {
             const modeId = button.getAttribute('data-mode-id');
-            if (!modeId) return;
+            if (!modeId) {
+                console.warn(`[ModeSelect] Button ${index} has no data-mode-id`);
+                return;
+            }
             
-            // Remove existing listeners
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
+            console.log(`[ModeSelect] Registering handler for mode: ${modeId}`);
             
-            // Register with UnifiedButtonHandler if available
+            // Create a unique ID for the button if it doesn't have one
+            if (!button.id) {
+                button.id = `mode-card-btn-${modeId}`;
+            }
+            
+            // Register with UnifiedButtonHandler if available (it will handle cloning)
             if (window.UnifiedButtonHandler) {
-                window.UnifiedButtonHandler.registerButton(newButton, () => {
+                const registered = window.UnifiedButtonHandler.registerButton(button, () => {
+                    console.log(`[ModeSelect] Button clicked for mode: ${modeId}`);
                     this.handleModePlay(modeId);
                 });
+                
+                if (!registered) {
+                    console.warn(`[ModeSelect] Failed to register button for ${modeId}, using fallback`);
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log(`[ModeSelect] Button clicked for mode: ${modeId} (fallback)`);
+                        this.handleModePlay(modeId);
+                    });
+                }
             } else {
-                newButton.addEventListener('click', () => {
+                // Fallback: direct event listener
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log(`[ModeSelect] Button clicked for mode: ${modeId}`);
                     this.handleModePlay(modeId);
                 });
             }
         });
+        
+        console.log(`[ModeSelect] Registered ${playButtons.length} mode card button handlers`);
     },
     
     // Handle mode play button click
@@ -489,19 +523,28 @@ const ModeSelect = {
             modeDef = this.modeDefinitions.find(m => m.id === modeId);
             if (!modeDef) {
                 console.error(`[ModeSelect] Mode not found: ${modeId}`);
+                console.error(`[ModeSelect] Available modes:`, this.modeDefinitions.map(m => m.id));
                 return;
             }
+            
+            console.log(`[ModeSelect] Found mode definition for ${modeId}:`, modeDef);
+            console.log(`[ModeSelect] Init functions to try:`, modeDef.initFunctions);
             
             // Get init function via ModeCompatibilityChecker if available
             let initFunc = null;
             if (window.ModeCompatibilityChecker && window.ModeCompatibilityChecker.getModeInitFunction) {
                 initFunc = window.ModeCompatibilityChecker.getModeInitFunction(modeId);
+                if (initFunc) {
+                    console.log(`[ModeSelect] Got init function from ModeCompatibilityChecker`);
+                }
             }
             
             // Fallback: try to get init function directly
             if (!initFunc) {
                 for (const funcName of modeDef.initFunctions) {
                     let func = null;
+                    
+                    console.log(`[ModeSelect] Trying to find function: ${funcName}`);
                     
                     // Handle window.XXX.YYY pattern
                     if (funcName.includes('.')) {
@@ -521,14 +564,18 @@ const ModeSelect = {
                     }
                     
                     if (func && typeof func === 'function') {
+                        console.log(`[ModeSelect] Found init function: ${funcName}`);
                         initFunc = func;
                         break;
+                    } else {
+                        console.warn(`[ModeSelect] Init function not found or not a function: ${funcName}`);
                     }
                 }
             }
             
             if (!initFunc || typeof initFunc !== 'function') {
                 console.error(`[ModeSelect] Init function not found for mode: ${modeId}`);
+                console.error(`[ModeSelect] Tried functions:`, modeDef.initFunctions);
                 return;
             }
             
@@ -552,26 +599,37 @@ const ModeSelect = {
             }
             
             // Call init function
+            console.log(`[ModeSelect] Calling init function for ${modeId}`);
             try {
                 initFunc();
+                console.log(`[ModeSelect] Init function called successfully for ${modeId}`);
                 
                 // Hide mode select after init (safe to call even if init function already called it)
                 // Procedural mode opens settings modal first, hideModeSelect is called by generate button
                 if (modeId !== 'procedural' && typeof window.hideModeSelect === 'function') {
                     // Use setTimeout to ensure init function completes first
                     setTimeout(() => {
+                        console.log(`[ModeSelect] Hiding mode select screen`);
                         if (typeof window.hideModeSelect === 'function') {
                             window.hideModeSelect();
+                        } else {
+                            console.warn(`[ModeSelect] hideModeSelect is not a function`);
                         }
                     }, 100);
+                } else if (modeId === 'procedural') {
+                    console.log(`[ModeSelect] Procedural mode - skipping hideModeSelect (will be called by generate button)`);
+                } else {
+                    console.warn(`[ModeSelect] hideModeSelect is not available`);
                 }
             } catch (e) {
                 console.error(`[ModeSelect] Error starting mode ${modeId}:`, e);
+                console.error(e.stack);
                 return;
             }
             
         } catch (error) {
             console.error('[ModeSelect] Error handling mode play:', error);
+            console.error(error.stack);
         }
     },
     
