@@ -16,7 +16,7 @@ let precisionLevel = 1;
 const PRECISION_GRID_COLS = 20;
 const PRECISION_GRID_ROWS = 20;
 const PRECISION_CELL_SIZE = 20;
-const PRECISION_TICK_MS = 180; // game tick interval in milliseconds (higher = slower)
+const PRECISION_TICK_MS = 140; // game tick interval in milliseconds (higher = slower)
 
 function initPrecisionBite() {
     // Create canvas
@@ -96,7 +96,7 @@ function spawnPrecisionTarget() {
             y: Math.floor(Math.random() * PRECISION_GRID_ROWS),
             size: 5 - (precisionLevel - 1) * 0.5, // Shrinks with level
             maxSize: 5 - (precisionLevel - 1) * 0.5,
-            shrinkSpeed: 0.02 + (precisionLevel - 1) * 0.01,
+            shrinkSpeed: 0.015 + (precisionLevel - 1) * 0.008, // Slower shrinking for smoother gameplay
             timeLeft: 5000 - (precisionLevel - 1) * 200 // Less time at higher levels
         };
     } while (precisionSnake.some(segment => segment.x === newTarget.x && segment.y === newTarget.y));
@@ -146,6 +146,10 @@ function startPrecisionBite() {
     precisionRunning = true;
     document.getElementById('precisionStartBtn').style.display = 'none';
     
+    // Get difficulty settings
+    const difficulty = window.getCurrentDifficulty ? window.getCurrentDifficulty() : { minigameSpeedMultiplier: 1.0 };
+    const tickInterval = Math.max(60, Math.floor(PRECISION_TICK_MS / difficulty.minigameSpeedMultiplier));
+    
     const targetStartTime = Date.now();
     
     precisionLoop = setInterval(() => {
@@ -155,14 +159,14 @@ function startPrecisionBite() {
         // Update target
             if (precisionTarget) {
                 precisionTarget.size = Math.max(0.5, precisionTarget.size - precisionTarget.shrinkSpeed);
-                precisionTarget.timeLeft = Math.max(0, precisionTarget.timeLeft - PRECISION_TICK_MS);
+                precisionTarget.timeLeft = Math.max(0, precisionTarget.timeLeft - tickInterval);
             
             // Target expired
             if (precisionTarget.timeLeft <= 0 || precisionTarget.size <= 0.5) {
                 endPrecisionBite();
             }
         }
-    }, PRECISION_TICK_MS);
+    }, tickInterval);
 }
 
 function updatePrecisionBite() {
@@ -218,21 +222,46 @@ function drawPrecisionBite() {
     precisionCtx.fillStyle = '#111';
     precisionCtx.fillRect(0, 0, precisionCanvas.width, precisionCanvas.height);
     
-    // Draw target zone
+    // Draw grid background
+    precisionCtx.strokeStyle = '#1a1a1a';
+    precisionCtx.lineWidth = 1;
+    for (let i = 0; i <= PRECISION_GRID_COLS; i++) {
+        precisionCtx.beginPath();
+        precisionCtx.moveTo(i * PRECISION_CELL_SIZE, 0);
+        precisionCtx.lineTo(i * PRECISION_CELL_SIZE, precisionCanvas.height);
+        precisionCtx.stroke();
+    }
+    for (let i = 0; i <= PRECISION_GRID_ROWS; i++) {
+        precisionCtx.beginPath();
+        precisionCtx.moveTo(0, i * PRECISION_CELL_SIZE);
+        precisionCtx.lineTo(precisionCanvas.width, i * PRECISION_CELL_SIZE);
+        precisionCtx.stroke();
+    }
+    
+    // Draw target zone (square)
     if (precisionTarget) {
         const targetX = precisionTarget.x * PRECISION_CELL_SIZE + PRECISION_CELL_SIZE / 2;
         const targetY = precisionTarget.y * PRECISION_CELL_SIZE + PRECISION_CELL_SIZE / 2;
-        const radius = precisionTarget.size * PRECISION_CELL_SIZE;
+        const halfSize = precisionTarget.size * PRECISION_CELL_SIZE / 2;
         
+        // Draw filled square
+        precisionCtx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+        precisionCtx.fillRect(
+            targetX - halfSize,
+            targetY - halfSize,
+            halfSize * 2,
+            halfSize * 2
+        );
+        
+        // Draw square border
         precisionCtx.strokeStyle = '#ffd700';
         precisionCtx.lineWidth = 2;
-        precisionCtx.beginPath();
-        precisionCtx.arc(targetX, targetY, radius, 0, Math.PI * 2);
-        precisionCtx.stroke();
-        
-        // Fill with transparency
-        precisionCtx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-        precisionCtx.fill();
+        precisionCtx.strokeRect(
+            targetX - halfSize,
+            targetY - halfSize,
+            halfSize * 2,
+            halfSize * 2
+        );
     }
     
     // Draw snake

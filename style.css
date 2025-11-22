@@ -1065,12 +1065,26 @@ p, body {
 }
 
 #gameCanvas {
-    border: 3px solid var(--border-color);
+    border: 4px solid var(--border-color);
     background-color: var(--bg-secondary);
     display: block;
     touch-action: none;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.1s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(76, 175, 80, 0.3);
+    transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+    /* Fixed size to prevent zooming */
+    width: 400px !important;
+    height: 400px !important;
+    max-width: 400px !important;
+    max-height: 400px !important;
+    min-width: 400px !important;
+    min-height: 400px !important;
+    /* Responsive on small screens */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+    margin: 0 auto;
 }
 
 /* Game Over Overlay */
@@ -1882,27 +1896,47 @@ p, body {
 }
 
 .app-logo-icon {
-    font-size: 1.2em;
-    display: inline-block;
-    height: 1.2em;
-    width: auto;
+    font-size: 1.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2em;
+    width: 2em;
+    min-height: 2em;
+    min-width: 2em;
     line-height: 1;
     vertical-align: middle;
+    padding: 0;
+    background: transparent;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    position: relative;
+    border: none;
 }
 
 .app-logo-icon img {
     height: 100%;
-    width: auto;
+    width: 100%;
     display: block;
     object-fit: contain;
+    margin: 0;
+    border: none;
 }
 
-/* If logo-icon is directly an img, not a container */
+/* If logo-icon is directly an img - clean logo without borders */
 img.app-logo-icon {
-    height: 1.2em;
-    width: auto;
+    height: 2em;
+    width: 2em;
+    min-height: 2em;
+    min-width: 2em;
+    padding: 0;
+    background: transparent;
+    box-sizing: border-box;
     display: inline-block;
     vertical-align: middle;
+    object-fit: contain;
+    flex-shrink: 0;
+    border: none;
 }
 
 .app-logo-text {
@@ -2191,6 +2225,13 @@ img.app-logo-icon {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    box-sizing: border-box;
+    background: var(--bg-primary);
+    position: relative;
 }
 
 /* Floating HUD */
@@ -2897,10 +2938,12 @@ img.app-logo-icon {
     }
     
     #gameCanvas {
-        width: 90vw;
-        height: 90vw;
-        max-width: 400px;
-        max-height: 400px;
+        width: min(90vw, 400px) !important;
+        height: min(90vw, 400px) !important;
+        max-width: 400px !important;
+        max-height: 400px !important;
+        min-width: auto !important;
+        min-height: auto !important;
     }
     
     .control-pad {
@@ -4988,6 +5031,8 @@ h2 {
 .app-logo-icon[data-pulse-setup="true"] {
     will-change: transform;
     transform-origin: center center;
+    /* Ensure the red circle border scales smoothly with the logo */
+    transition: transform 0.3s ease-in-out;
 }
 
 /* Enhanced button transitions for mode select */
@@ -6285,12 +6330,57 @@ textarea:focus-visible {
     transform: scale(0.95);
 }
 
+/* Game UI Styling */
+.game-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.game-ui-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.game-ui-item {
+    color: var(--text-primary);
+    font-size: 1.2em;
+    font-weight: 700;
+    padding: 12px 24px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    min-width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.game-ui-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .social-share-btn {
         width: 36px;
         height: 36px;
         font-size: 1em;
+    }
+    
+    #gameCanvas {
+        width: min(90vw, 400px) !important;
+        height: min(90vw, 400px) !important;
+        max-width: 400px !important;
+        max-height: 400px !important;
     }
 }
 

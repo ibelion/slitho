@@ -139,6 +139,11 @@ function startFruitRush() {
     fruitRushStartTime = Date.now();
     document.getElementById('fruitRushStartBtn').style.display = 'none';
     
+    // Get difficulty settings
+    const baseTickInterval = 100;
+    const difficulty = window.getCurrentDifficulty ? window.getCurrentDifficulty() : { minigameSpeedMultiplier: 1.0 };
+    const tickInterval = Math.max(40, Math.floor(baseTickInterval / difficulty.minigameSpeedMultiplier));
+    
     fruitRushLoop = setInterval(() => {
         updateFruitRush();
         drawFruitRush();
@@ -150,7 +155,7 @@ function startFruitRush() {
         if (timerElement) {
             timerElement.textContent = fruitRushElapsedTime;
         }
-    }, 100);
+    }, tickInterval);
 }
 
 function updateFruitRush() {
@@ -191,6 +196,22 @@ function drawFruitRush() {
     // Clear
     fruitRushCtx.fillStyle = '#111';
     fruitRushCtx.fillRect(0, 0, fruitRushCanvas.width, fruitRushCanvas.height);
+    
+    // Draw grid background
+    fruitRushCtx.strokeStyle = '#1a1a1a';
+    fruitRushCtx.lineWidth = 1;
+    for (let i = 0; i <= FRUIT_RUSH_GRID_COLS; i++) {
+        fruitRushCtx.beginPath();
+        fruitRushCtx.moveTo(i * FRUIT_RUSH_CELL_SIZE, 0);
+        fruitRushCtx.lineTo(i * FRUIT_RUSH_CELL_SIZE, fruitRushCanvas.height);
+        fruitRushCtx.stroke();
+    }
+    for (let i = 0; i <= FRUIT_RUSH_GRID_ROWS; i++) {
+        fruitRushCtx.beginPath();
+        fruitRushCtx.moveTo(0, i * FRUIT_RUSH_CELL_SIZE);
+        fruitRushCtx.lineTo(fruitRushCanvas.width, i * FRUIT_RUSH_CELL_SIZE);
+        fruitRushCtx.stroke();
+    }
     
     // Draw snake
     fruitRushCtx.fillStyle = '#4CAF50';

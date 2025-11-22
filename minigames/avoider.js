@@ -10,6 +10,7 @@ let avoiderTime = 0;
 let avoiderRunning = false;
 let avoiderLoop = null;
 let avoiderDx = 0;
+const AVOIDER_BASE_TICK_MS = 16; // ~60 FPS
 
 const AVOIDER_CANVAS_WIDTH = 400;
 const AVOIDER_CANVAS_HEIGHT = 600;
@@ -110,6 +111,13 @@ function startAvoider() {
     
     const startTime = Date.now();
     
+    // Get difficulty settings
+    const difficulty = window.getCurrentDifficulty ? window.getCurrentDifficulty() : { minigameSpeedMultiplier: 1.0 };
+    const baseSpawnRate = 0.05;
+    const spawnRate = baseSpawnRate * (2 - difficulty.minigameSpeedMultiplier); // Higher difficulty = more spawns
+    const baseSpeed = 2;
+    const maxSpeed = 3;
+    
     avoiderLoop = setInterval(() => {
         updateAvoider();
         drawAvoider();
@@ -119,13 +127,14 @@ function startAvoider() {
         document.getElementById('avoiderTimer').textContent = avoiderTime;
         document.getElementById('avoiderScore').textContent = avoiderScore;
         
-        // Spawn obstacles
-        if (Math.random() < 0.05) {
+        // Spawn obstacles (difficulty affects spawn rate)
+        if (Math.random() < spawnRate) {
+            const speedMultiplier = difficulty.minigameSpeedMultiplier;
             avoiderObstacles.push({
                 x: Math.random() * (AVOIDER_CANVAS_WIDTH - 30),
                 y: -30,
                 size: 20 + Math.random() * 20,
-                speed: 2 + Math.random() * 3
+                speed: (baseSpeed + Math.random() * (maxSpeed - baseSpeed)) / speedMultiplier
             });
         }
     }, 16); // ~60 FPS
@@ -134,8 +143,10 @@ function startAvoider() {
 function updateAvoider() {
     if (!avoiderRunning) return;
     
-    // Move player
-    avoiderPlayer.x += avoiderDx;
+    // Move player (movement speed affected by difficulty)
+    const difficulty = window.getCurrentDifficulty ? window.getCurrentDifficulty() : { minigameSpeedMultiplier: 1.0 };
+    const playerSpeed = 5 / difficulty.minigameSpeedMultiplier; // Faster on harder difficulties
+    avoiderPlayer.x += avoiderDx * playerSpeed;
     avoiderPlayer.x = Math.max(avoiderPlayer.size, Math.min(AVOIDER_CANVAS_WIDTH - avoiderPlayer.size, avoiderPlayer.x));
     
     // Update obstacles
@@ -169,6 +180,23 @@ function drawAvoider() {
     // Clear
     avoiderCtx.fillStyle = '#111';
     avoiderCtx.fillRect(0, 0, avoiderCanvas.width, avoiderCanvas.height);
+    
+    // Draw grid background (using 20px grid cells for visual consistency)
+    const GRID_CELL_SIZE = 20;
+    avoiderCtx.strokeStyle = '#1a1a1a';
+    avoiderCtx.lineWidth = 1;
+    for (let x = 0; x <= avoiderCanvas.width; x += GRID_CELL_SIZE) {
+        avoiderCtx.beginPath();
+        avoiderCtx.moveTo(x, 0);
+        avoiderCtx.lineTo(x, avoiderCanvas.height);
+        avoiderCtx.stroke();
+    }
+    for (let y = 0; y <= avoiderCanvas.height; y += GRID_CELL_SIZE) {
+        avoiderCtx.beginPath();
+        avoiderCtx.moveTo(0, y);
+        avoiderCtx.lineTo(avoiderCanvas.width, y);
+        avoiderCtx.stroke();
+    }
     
     // Draw obstacles
     avoiderCtx.fillStyle = '#f44336';

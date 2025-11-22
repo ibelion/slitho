@@ -1,44 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
     <linearGradient id="snakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#86efac;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#a8e063;stop-opacity:1" />
       <stop offset="50%" style="stop-color:#4ade80;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
     </linearGradient>
   </defs>
-  
-  <!-- Shadow -->
-  <ellipse cx="100" cy="195" rx="65" ry="10" fill="#000000" opacity="0.25"/>
-  
-  <!-- Main S shape (snake body) - flowing ribbon style -->
-  <path d="M 70 25 
-           C 50 25, 35 40, 40 60 
-           C 45 80, 65 85, 85 85 
-           C 105 85, 120 85, 135 95 
-           C 150 105, 155 125, 145 145 
-           C 135 165, 115 170, 95 160" 
-        fill="url(#snakeGradient)" 
-        stroke="#0a0a0a" 
-        stroke-width="5" 
-        stroke-linejoin="round" 
+
+  <!-- Red circular background -->
+  <circle cx="100" cy="100" r="90" fill="#ef4444" stroke="#cc3333" stroke-width="4" />
+
+  <!-- Shadow beneath the snake -->
+  <ellipse cx="100" cy="180" rx="65" ry="10" fill="#000000" opacity="0.25"/>
+
+  <!-- Main S shape (snake body) - bold, flowing, centered -->
+  <path d="M 65 35
+           C 45 35, 30 50, 35 65
+           C 40 80, 55 85, 75 85
+           C 95 85, 110 88, 125 95
+           C 140 102, 150 120, 145 140
+           C 140 160, 125 165, 105 160"
+        fill="url(#snakeGradient)"
+        stroke="#0f172a"
+        stroke-width="5.5"
+        stroke-linejoin="round"
         stroke-linecap="round"/>
-  
-  <!-- Eye - positioned on top curve -->
-  <circle cx="65" cy="42" r="9" fill="#ffffff"/>
-  <circle cx="65" cy="42" r="5" fill="#0a0a0a"/>
-  <circle cx="67" cy="40" r="2" fill="#ffffff" opacity="0.8"/>
-  
-  <!-- Tongue - extending from right side of top curve, droplet-like -->
-  <path d="M 130 25 
-           C 140 20, 148 15, 152 18 
-           C 156 21, 154 28, 148 30 
-           C 142 32, 135 30, 130 25 Z" 
-        fill="#86efac" 
-        stroke="#0a0a0a" 
-        stroke-width="2.5" 
+
+  <!-- Eye - white circle with black pupil on top curve (left side of head) -->
+  <circle cx="55" cy="52" r="10" fill="#ffffff"/>
+  <circle cx="55" cy="52" r="6" fill="#0f172a"/>
+  <circle cx="57" cy="50" r="2.5" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Forked tongue - extending from right side of head -->
+  <path d="M 125 35
+           C 133 30, 141 25, 145 28
+           C 149 31, 148 37, 143 39
+           C 140 40, 137 39, 135 37 Z"
+        fill="#a8e063"
+        stroke="#0f172a"
+        stroke-width="2.5"
         stroke-linejoin="round"/>
-  <path d="M 130 25 L 148 30" 
-        stroke="#0a0a0a" 
-        stroke-width="2" 
-        stroke-linecap="round"/>
+  <path d="M 135 37
+           C 137 38, 139 37, 140 36
+           C 141 35, 140 33, 139 32 Z"
+        fill="#a8e063"
+        stroke="#0f172a"
+        stroke-width="2"
+        stroke-linejoin="round"/>
 </svg>
