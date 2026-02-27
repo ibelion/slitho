@@ -4,15 +4,6 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 		<title>slithov5</title>
-		<script>
-			// Register service worker to inject Cross-Origin isolation headers
-			// required for the Godot WASM engine to run on GitHub Pages.
-			if ("serviceWorker" in navigator) {
-				navigator.serviceWorker.register("/coi-serviceworker.js").then(reg => {
-					if (!crossOriginIsolated) { location.reload(); }
-				});
-			}
-		</script>
 		<style>
 html, body, #canvas {
 	margin: 0;
@@ -120,7 +111,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":11632224,"index.wasm":38034280},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":11631168,"index.wasm":38034280},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
