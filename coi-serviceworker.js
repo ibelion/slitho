@@ -2,8 +2,19 @@
 /* Adds Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers  */
 /* via a Service Worker, enabling SharedArrayBuffer on pages that need it.    */
 
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+const CACHE_VERSION = "v3"; // bump this to bust old caches
+
+self.addEventListener("install", e => {
+  e.waitUntil(caches.delete(CACHE_VERSION));
+  self.skipWaiting();
+});
+self.addEventListener("activate", e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
 
 async function handleFetch(request) {
   if (request.cache === "only-if-cached" && request.mode !== "same-origin") {
