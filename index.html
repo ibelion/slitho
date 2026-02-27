@@ -4,6 +4,15 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 		<title>slithov5</title>
+		<script>
+			// Register service worker to inject Cross-Origin isolation headers
+			// required for the Godot WASM engine to run on GitHub Pages.
+			if ("serviceWorker" in navigator) {
+				navigator.serviceWorker.register("/coi-serviceworker.js").then(reg => {
+					if (!crossOriginIsolated) { location.reload(); }
+				});
+			}
+		</script>
 		<style>
 html, body, #canvas {
 	margin: 0;
