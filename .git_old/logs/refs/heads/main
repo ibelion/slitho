@@ -1,0 +1,8 @@
+0000000000000000000000000000000000000000 bb89203f091b4ab88634f23924658a7962acf64d ibelion <josh.13.c13@gmail.com> 1772156012 -0800	clone: from https://github.com/ibelion/slitho.git
+bb89203f091b4ab88634f23924658a7962acf64d 8fd585a76dfdbbc8f3ed206adaf55ccce0847284 ibelion <josh.13.c13@gmail.com> 1772178076 -0800	commit: demo slitho
+8fd585a76dfdbbc8f3ed206adaf55ccce0847284 3d0a49580398b93bc220abca113a551d02d0a722 ibelion <josh.13.c13@gmail.com> 1772178358 -0800	commit: fix: use git lfs for large godot assets
+3d0a49580398b93bc220abca113a551d02d0a722 f66b2d79a92685097294e9a61905a147b72ea71e ibelion <josh.13.c13@gmail.com> 1772178838 -0800	commit: fix: remove git lfs for cloudflare compatibility
+f66b2d79a92685097294e9a61905a147b72ea71e 2cd2231ac32ac1e2f200b2484a634c6530777a34 ibelion <josh.13.c13@gmail.com> 1772178909 -0800	commit: fix: absolute removal of git lfs
+2cd2231ac32ac1e2f200b2484a634c6530777a34 5ffd1872bf0d302b8e34af0ef163a206f26f215f ibelion <josh.13.c13@gmail.com> 1772179339 -0800	commit: chore: clear lfs index entries
+5ffd1872bf0d302b8e34af0ef163a206f26f215f 35456e6782b107bc70c3a61fb22394cac6069ca5 ibelion <josh.13.c13@gmail.com> 1772179339 -0800	commit: fix: restore assets as raw binaries
+35456e6782b107bc70c3a61fb22394cac6069ca5 1a7735434d51958620d5f8b99764bddd8f4f4c25 ibelion <josh.13.c13@gmail.com> 1772179391 -0800	commit: fix: force direct binary add bypassing lfs filters
